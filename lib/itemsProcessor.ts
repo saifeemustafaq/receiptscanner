@@ -37,7 +37,7 @@ export function processItemsFromReceipts(receipts: SavedReceipt[]): ProcessedIte
       itemsMap.get(normalizedName)!.push({
         store: receipt.storeNameSelected,
         price: item.totalPrice / (item.quantity || 1), // Price per unit
-        unit: item.unit,
+        unit: item.unit ?? null,
         date: receipt.billingDate,
         receiptId: receipt.id,
         timestamp: receipt.timestamp,
