@@ -9,9 +9,12 @@ import DatePicker from './components/DatePicker';
 import ExtractedDataDisplay, { ExtractedData } from './components/ExtractedDataDisplay';
 import ReceiptHistory from './components/ReceiptHistory';
 import Settings from './components/Settings';
+import ItemsList from './components/ItemsList';
+import ItemDetail from './components/ItemDetail';
 import Button from './components/Button';
+import { processItemsFromReceipts, getItemByName, ProcessedItem } from '@/lib/itemsProcessor';
 
-interface SavedReceipt {
+export interface SavedReceipt {
   id: string;
   storeNameScanned: string;
   storeNameSelected: string;
@@ -22,7 +25,7 @@ interface SavedReceipt {
 }
 
 export default function Home() {
-  const [currentView, setCurrentView] = useState<'home' | 'history' | 'settings'>('home');
+  const [currentView, setCurrentView] = useState<'home' | 'items' | 'history' | 'settings'>('home');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedStore, setSelectedStore] = useState('');
@@ -33,6 +36,9 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [receipts, setReceipts] = useState<SavedReceipt[]>([]);
   const [uploadKey, setUploadKey] = useState(0); // Key to force ReceiptUpload remount
+  
+  // Items view state
+  const [selectedItem, setSelectedItem] = useState<ProcessedItem | null>(null);
 
   // Load data from server on mount
   useEffect(() => {
@@ -255,9 +261,21 @@ export default function Home() {
     alert('Local store settings cleared');
   };
 
-  const handleNavigate = (view: 'home' | 'history' | 'settings') => {
+  const handleNavigate = (view: 'home' | 'items' | 'history' | 'settings') => {
     setCurrentView(view);
     setSidebarOpen(false);
+    setSelectedItem(null); // Reset item selection when navigating
+  };
+
+  const handleItemClick = (itemName: string) => {
+    const item = getItemByName(receipts, itemName);
+    if (item) {
+      setSelectedItem(item);
+    }
+  };
+
+  const handleBackToItems = () => {
+    setSelectedItem(null);
   };
 
   return (
@@ -338,6 +356,19 @@ export default function Home() {
                   </div>
                 )}
               </div>
+            </>
+          )}
+
+          {currentView === 'items' && (
+            <>
+              {selectedItem ? (
+                <ItemDetail item={selectedItem} onBack={handleBackToItems} />
+              ) : (
+                <ItemsList 
+                  items={processItemsFromReceipts(receipts)}
+                  onItemClick={handleItemClick}
+                />
+              )}
             </>
           )}
 

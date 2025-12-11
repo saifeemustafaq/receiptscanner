@@ -1,11 +1,11 @@
 'use client';
 
 import React from 'react';
-import { Home, FileText, Settings as SettingsIcon } from 'lucide-react';
+import { Home, FileText, ShoppingBag, Settings as SettingsIcon } from 'lucide-react';
 
 interface SidebarProps {
-  currentView: 'home' | 'history' | 'settings';
-  onNavigate: (view: 'home' | 'history' | 'settings') => void;
+  currentView: 'home' | 'items' | 'history' | 'settings';
+  onNavigate: (view: 'home' | 'items' | 'history' | 'settings') => void;
   isOpen?: boolean;
 }
 
@@ -23,6 +23,14 @@ export default function Sidebar({ currentView, onNavigate, isOpen = true }: Side
         >
           <Home size={20} />
           <span>Home</span>
+        </button>
+        
+        <button
+          className={`nav-item ${currentView === 'items' ? 'active' : ''}`}
+          onClick={() => onNavigate('items')}
+        >
+          <ShoppingBag size={20} />
+          <span>Items</span>
         </button>
         
         <button
