@@ -361,7 +361,7 @@ export default function Home() {
                           marginBottom: '8px',
                           color: 'var(--black-text)'
                         }}>
-                          Billing Date
+                          Receipt Date
                         </label>
                         <DatePicker
                           selectedDate={billingDate}
