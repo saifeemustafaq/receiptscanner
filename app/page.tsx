@@ -294,6 +294,72 @@ export default function Home() {
     });
   };
 
+  const handleItemRename = async (oldName: string, newName: string) => {
+    try {
+      // Find all receipts that contain items with the old name
+      const oldNameLower = oldName.toLowerCase().trim();
+      const updatedReceipts = receipts.map(receipt => {
+        const hasMatchingItem = receipt.extractedData.items.some(
+          item => item.name.toLowerCase().trim() === oldNameLower
+        );
+
+        if (!hasMatchingItem) return receipt;
+
+        // Update items with the old name to the new name
+        const updatedItems = receipt.extractedData.items.map(item => {
+          if (item.name.toLowerCase().trim() === oldNameLower) {
+            return { ...item, name: newName };
+          }
+          return item;
+        });
+
+        return {
+          ...receipt,
+          extractedData: {
+            ...receipt.extractedData,
+            items: updatedItems
+          }
+        };
+      });
+
+      // Update each receipt on the server
+      for (const receipt of updatedReceipts) {
+        const originalReceipt = receipts.find(r => r.id === receipt.id);
+        if (originalReceipt && JSON.stringify(originalReceipt) !== JSON.stringify(receipt)) {
+          await fetch('/api/receipts', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              id: receipt.id, 
+              updates: { extractedData: receipt.extractedData } 
+            }),
+          });
+        }
+      }
+
+      // Reload receipts to reflect changes
+      await loadReceipts();
+
+      // After reload, find the newly merged item and select it
+      const processedItems = processItemsFromReceipts(updatedReceipts);
+      const newItem = processedItems.find(
+        item => item.normalizedName === newName.toLowerCase().trim()
+      );
+      
+      if (newItem) {
+        setSelectedItem(newItem);
+      } else {
+        // If not found, go back to items list
+        setSelectedItem(null);
+      }
+
+      alert(`Item renamed successfully! ${oldName} → ${newName}`);
+    } catch (error) {
+      console.error('Error renaming item:', error);
+      throw error;
+    }
+  };
+
   return (
     <div className="app-container">
       {/* Mobile Menu Button */}
@@ -410,7 +476,11 @@ export default function Home() {
           {currentView === 'items' && (
             <>
               {selectedItem ? (
-                <ItemDetail item={selectedItem} onBack={handleBackToItems} />
+                <ItemDetail 
+                  item={selectedItem} 
+                  onBack={handleBackToItems}
+                  onItemRename={handleItemRename}
+                />
               ) : (
                 <ItemsList 
                   items={processItemsFromReceipts(receipts)}
