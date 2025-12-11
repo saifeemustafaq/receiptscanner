@@ -30,6 +30,9 @@ export default function ReceiptHistory({ receipts, stores, onDelete, onUpdate, o
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editedStoreName, setEditedStoreName] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [editingField, setEditingField] = useState<{receiptId: string, itemIndex: number, field: string} | null>(null);
+  const [tempValue, setTempValue] = useState<any>('');
+  const [editedItems, setEditedItems] = useState<any[]>([]);
 
   // Create store options for dropdown
   const getStoreOptions = () => {
@@ -70,6 +73,66 @@ export default function ReceiptHistory({ receipts, stores, onDelete, onUpdate, o
     const newStore = e.target.value;
     if (newStore && newStore !== '') {
       setEditedStoreName(newStore);
+    }
+  };
+
+  const startEditingField = (receiptId: string, itemIndex: number, field: string, currentValue: any) => {
+    const receipt = receipts.find(r => r.id === receiptId);
+    if (!receipt) return;
+    
+    setEditedItems(JSON.parse(JSON.stringify(receipt.extractedData.items))); // Deep copy
+    setEditingField({ receiptId, itemIndex, field });
+    setTempValue(currentValue);
+  };
+
+  const cancelEditingField = () => {
+    setEditingField(null);
+    setTempValue('');
+    setEditedItems([]);
+  };
+
+  const saveFieldEdit = () => {
+    if (!editingField) return;
+    
+    const { receiptId, itemIndex, field } = editingField;
+    const updatedItems = [...editedItems];
+    updatedItems[itemIndex] = { ...updatedItems[itemIndex], [field]: tempValue };
+    
+    // Auto-calculate totalPrice if quantity or unitPrice changes
+    const item = updatedItems[itemIndex];
+    if (field === 'quantity' || field === 'unitPrice') {
+      const qty = parseFloat(item.quantity?.toString() || '0');
+      const price = parseFloat(item.unitPrice?.toString() || '0');
+      if (!isNaN(qty) && !isNaN(price)) {
+        updatedItems[itemIndex].totalPrice = qty * price;
+      }
+    }
+    
+    // Calculate new total
+    const newTotal = updatedItems.reduce((sum, item) => sum + (item.totalPrice || 0), 0);
+    
+    // Update the receipt
+    const receipt = receipts.find(r => r.id === receiptId);
+    if (receipt) {
+      onUpdate(receiptId, {
+        extractedData: {
+          ...receipt.extractedData,
+          items: updatedItems,
+          total: newTotal
+        }
+      });
+    }
+    
+    setEditingField(null);
+    setTempValue('');
+    setEditedItems([]);
+  };
+
+  const handleFieldKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      saveFieldEdit();
+    } else if (e.key === 'Escape') {
+      cancelEditingField();
     }
   };
 
@@ -221,17 +284,157 @@ export default function ReceiptHistory({ receipts, stores, onDelete, onUpdate, o
                           </tr>
                         </thead>
                         <tbody>
-                          {receipt.extractedData.items.map((item, idx) => (
+                          {(editingField?.receiptId === receipt.id ? editedItems : receipt.extractedData.items).map((item, idx) => (
                             <tr key={idx} style={{ borderBottom: '1px solid var(--ivory-border)' }}>
-                              <td style={{ padding: '12px' }}>{item.name}</td>
-                              <td style={{ padding: '12px', textAlign: 'right' }}>
-                                {item.quantity} {item.unit || ''}
+                              <td style={{ padding: '12px' }}>
+                                {editingField?.receiptId === receipt.id && editingField?.itemIndex === idx && editingField?.field === 'name' ? (
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                    <input
+                                      type="text"
+                                      value={tempValue}
+                                      onChange={(e) => setTempValue(e.target.value)}
+                                      onKeyDown={handleFieldKeyDown}
+                                      autoFocus
+                                      style={{
+                                        width: '100%',
+                                        padding: '6px 8px',
+                                        fontSize: '14px',
+                                        border: '2px solid var(--golden-main)',
+                                        borderRadius: '4px',
+                                      }}
+                                    />
+                                    <button onClick={saveFieldEdit} style={{ padding: '4px', cursor: 'pointer', background: 'none', border: 'none' }}>
+                                      <Check size={16} color="var(--green-main)" />
+                                    </button>
+                                    <button onClick={cancelEditingField} style={{ padding: '4px', cursor: 'pointer', background: 'none', border: 'none' }}>
+                                      <X size={16} color="var(--error-text)" />
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <span
+                                    onClick={() => startEditingField(receipt.id, idx, 'name', item.name)}
+                                    style={{ cursor: 'pointer', padding: '4px 8px', borderRadius: '4px' }}
+                                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--ivory-darker)'}
+                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                  >
+                                    {item.name}
+                                  </span>
+                                )}
                               </td>
                               <td style={{ padding: '12px', textAlign: 'right' }}>
-                                {item.unitPrice ? `$${item.unitPrice.toFixed(2)}` : '-'}
+                                {editingField?.receiptId === receipt.id && editingField?.itemIndex === idx && editingField?.field === 'quantity' ? (
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end' }}>
+                                    <input
+                                      type="number"
+                                      value={tempValue}
+                                      onChange={(e) => setTempValue(parseFloat(e.target.value) || 0)}
+                                      onKeyDown={handleFieldKeyDown}
+                                      autoFocus
+                                      step="0.01"
+                                      style={{
+                                        width: '70px',
+                                        padding: '6px 8px',
+                                        fontSize: '14px',
+                                        border: '2px solid var(--golden-main)',
+                                        borderRadius: '4px',
+                                        textAlign: 'right',
+                                      }}
+                                    />
+                                    <span style={{ minWidth: '30px', fontSize: '12px' }}>{item.unit || ''}</span>
+                                    <button onClick={saveFieldEdit} style={{ padding: '4px', cursor: 'pointer', background: 'none', border: 'none' }}>
+                                      <Check size={16} color="var(--green-main)" />
+                                    </button>
+                                    <button onClick={cancelEditingField} style={{ padding: '4px', cursor: 'pointer', background: 'none', border: 'none' }}>
+                                      <X size={16} color="var(--error-text)" />
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <span
+                                    onClick={() => startEditingField(receipt.id, idx, 'quantity', item.quantity)}
+                                    style={{ cursor: 'pointer', padding: '4px 8px', borderRadius: '4px' }}
+                                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--ivory-darker)'}
+                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                  >
+                                    {item.quantity || '-'} {item.unit || ''}
+                                  </span>
+                                )}
+                              </td>
+                              <td style={{ padding: '12px', textAlign: 'right' }}>
+                                {editingField?.receiptId === receipt.id && editingField?.itemIndex === idx && editingField?.field === 'unitPrice' ? (
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end' }}>
+                                    <input
+                                      type="number"
+                                      value={tempValue}
+                                      onChange={(e) => setTempValue(parseFloat(e.target.value) || 0)}
+                                      onKeyDown={handleFieldKeyDown}
+                                      autoFocus
+                                      step="0.01"
+                                      placeholder="0.00"
+                                      style={{
+                                        width: '90px',
+                                        padding: '6px 8px',
+                                        fontSize: '14px',
+                                        border: '2px solid var(--golden-main)',
+                                        borderRadius: '4px',
+                                        textAlign: 'right',
+                                      }}
+                                    />
+                                    <button onClick={saveFieldEdit} style={{ padding: '4px', cursor: 'pointer', background: 'none', border: 'none' }}>
+                                      <Check size={16} color="var(--green-main)" />
+                                    </button>
+                                    <button onClick={cancelEditingField} style={{ padding: '4px', cursor: 'pointer', background: 'none', border: 'none' }}>
+                                      <X size={16} color="var(--error-text)" />
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <span
+                                    onClick={() => startEditingField(receipt.id, idx, 'unitPrice', item.unitPrice)}
+                                    style={{ cursor: 'pointer', padding: '4px 8px', borderRadius: '4px' }}
+                                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--ivory-darker)'}
+                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                  >
+                                    {item.unitPrice ? `$${item.unitPrice.toFixed(2)}` : '-'}
+                                  </span>
+                                )}
                               </td>
                               <td style={{ padding: '12px', textAlign: 'right', fontWeight: 600 }}>
-                                ${item.totalPrice.toFixed(2)}
+                                {editingField?.receiptId === receipt.id && editingField?.itemIndex === idx && editingField?.field === 'totalPrice' ? (
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end' }}>
+                                    <input
+                                      type="number"
+                                      value={tempValue}
+                                      onChange={(e) => setTempValue(parseFloat(e.target.value) || 0)}
+                                      onKeyDown={handleFieldKeyDown}
+                                      autoFocus
+                                      step="0.01"
+                                      placeholder="0.00"
+                                      style={{
+                                        width: '90px',
+                                        padding: '6px 8px',
+                                        fontSize: '14px',
+                                        border: '2px solid var(--golden-main)',
+                                        borderRadius: '4px',
+                                        textAlign: 'right',
+                                        fontWeight: 600,
+                                      }}
+                                    />
+                                    <button onClick={saveFieldEdit} style={{ padding: '4px', cursor: 'pointer', background: 'none', border: 'none' }}>
+                                      <Check size={16} color="var(--green-main)" />
+                                    </button>
+                                    <button onClick={cancelEditingField} style={{ padding: '4px', cursor: 'pointer', background: 'none', border: 'none' }}>
+                                      <X size={16} color="var(--error-text)" />
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <span
+                                    onClick={() => startEditingField(receipt.id, idx, 'totalPrice', item.totalPrice)}
+                                    style={{ cursor: 'pointer', padding: '4px 8px', borderRadius: '4px' }}
+                                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--ivory-darker)'}
+                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                  >
+                                    {item.totalPrice != null ? `$${item.totalPrice.toFixed(2)}` : '-'}
+                                  </span>
+                                )}
                               </td>
                             </tr>
                           ))}
@@ -243,7 +446,10 @@ export default function ReceiptHistory({ receipts, stores, onDelete, onUpdate, o
                               TOTAL:
                             </td>
                             <td style={{ padding: '12px', textAlign: 'right', fontWeight: 700 }}>
-                              ${receipt.extractedData.total.toFixed(2)}
+                              {editingField?.receiptId === receipt.id && editedItems.length > 0
+                                ? `$${editedItems.reduce((sum, item) => sum + (item.totalPrice || 0), 0).toFixed(2)}`
+                                : `$${receipt.extractedData.total?.toFixed(2) || '0.00'}`
+                              }
                             </td>
                           </tr>
                         </tbody>

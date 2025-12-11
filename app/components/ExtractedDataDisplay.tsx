@@ -1,8 +1,8 @@
 'use client';
 
-import React from 'react';
-import { CheckCircle, AlertCircle, Loader } from 'lucide-react';
-import Card from './Card';
+import React, { useState, useEffect } from 'react';
+import { CheckCircle, AlertCircle, Loader, Check, X } from 'lucide-react';
+import EditableItemName from './EditableItemName';
 
 export interface ReceiptItem {
   name: string;
@@ -23,16 +23,92 @@ interface ExtractedDataDisplayProps {
   data: ExtractedData | null;
   isProcessing: boolean;
   error: string | null;
+  existingItemNames?: string[]; // For autocomplete suggestions
+  onItemChange?: (index: number, updatedItem: ReceiptItem) => void;
 }
 
 export default function ExtractedDataDisplay({ 
   data, 
   isProcessing, 
-  error 
+  error,
+  existingItemNames = [],
+  onItemChange,
 }: ExtractedDataDisplayProps) {
+  const [editedItems, setEditedItems] = useState<ReceiptItem[]>([]);
+  const [editingField, setEditingField] = useState<{index: number, field: string} | null>(null);
+  const [tempValue, setTempValue] = useState<any>('');
+
+  // Initialize edited items when data changes
+  useEffect(() => {
+    if (data?.items) {
+      setEditedItems(data.items);
+    }
+  }, [data]);
+
+  const handleItemNameChange = (index: number, newName: string) => {
+    const updatedItems = [...editedItems];
+    updatedItems[index] = { ...updatedItems[index], name: newName };
+    setEditedItems(updatedItems);
+    
+    if (onItemChange) {
+      onItemChange(index, updatedItems[index]);
+    }
+  };
+
+  const startEditing = (index: number, field: string, currentValue: any) => {
+    setEditingField({ index, field });
+    setTempValue(currentValue);
+  };
+
+  const cancelEditing = () => {
+    setEditingField(null);
+    setTempValue('');
+  };
+
+  const saveFieldEdit = () => {
+    if (!editingField) return;
+    
+    const { index, field } = editingField;
+    const updatedItems = [...editedItems];
+    updatedItems[index] = { ...updatedItems[index], [field]: tempValue };
+    
+    // Auto-calculate totalPrice if quantity or unitPrice changes
+    const item = updatedItems[index];
+    if (field === 'quantity' || field === 'unitPrice') {
+      const qty = parseFloat(item.quantity?.toString() || '0');
+      const price = parseFloat(item.unitPrice?.toString() || '0');
+      if (!isNaN(qty) && !isNaN(price)) {
+        updatedItems[index].totalPrice = qty * price;
+      }
+    }
+    
+    setEditedItems(updatedItems);
+    
+    if (onItemChange) {
+      onItemChange(index, updatedItems[index]);
+    }
+    
+    setEditingField(null);
+    setTempValue('');
+  };
+
+  const handleFieldKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      saveFieldEdit();
+    } else if (e.key === 'Escape') {
+      cancelEditing();
+    }
+  };
   return (
-    <Card>
-      <h2 className="card-title">Extracted Receipt Data</h2>
+    <div>
+      <h3 style={{
+        fontSize: '18px',
+        fontWeight: 600,
+        marginBottom: '16px',
+        color: 'var(--black-text)'
+      }}>
+        Extracted Items
+      </h3>
       
       {isProcessing && (
         <div className="flex items-center justify-center gap-md" style={{ padding: '32px 0' }}>
@@ -139,27 +215,137 @@ export default function ExtractedDataDisplay({
                   </tr>
                 </thead>
                 <tbody>
-                  {data.items.map((item, index) => (
+                  {editedItems.map((item, index) => (
                     <tr 
                       key={index}
                       style={{
-                        borderBottom: index === data.items.length - 1 ? 'none' : '1px solid var(--ivory-border)',
+                        borderBottom: index === editedItems.length - 1 ? 'none' : '1px solid var(--ivory-border)',
                         transition: 'background-color 0.2s'
                       }}
                       onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--ivory-card)'}
                       onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                     >
-                      <td style={{ padding: '16px', fontWeight: 500 }}>
-                        {item.name}
+                      <td style={{ padding: '16px', fontWeight: 500, verticalAlign: 'middle' }}>
+                        <EditableItemName
+                          value={item.name}
+                          onChange={(newName) => handleItemNameChange(index, newName)}
+                          suggestions={existingItemNames}
+                        />
                       </td>
-                      <td style={{ padding: '16px', textAlign: 'right' }}>
-                        {item.quantity} {item.unit || ''}
+                      <td style={{ padding: '16px', textAlign: 'right', verticalAlign: 'middle' }}>
+                        {editingField?.index === index && editingField?.field === 'quantity' ? (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end' }}>
+                            <input
+                              type="number"
+                              value={tempValue}
+                              onChange={(e) => setTempValue(parseFloat(e.target.value) || 0)}
+                              onKeyDown={handleFieldKeyDown}
+                              autoFocus
+                              step="0.01"
+                              style={{
+                                width: '70px',
+                                padding: '6px 8px',
+                                fontSize: '14px',
+                                border: '2px solid var(--golden-main)',
+                                borderRadius: '4px',
+                                textAlign: 'right',
+                              }}
+                            />
+                            <span style={{ minWidth: '30px', fontSize: '12px' }}>{item.unit || ''}</span>
+                            <button onClick={saveFieldEdit} style={{ padding: '4px', cursor: 'pointer', background: 'none', border: 'none' }}>
+                              <Check size={16} color="var(--green-main)" />
+                            </button>
+                            <button onClick={cancelEditing} style={{ padding: '4px', cursor: 'pointer', background: 'none', border: 'none' }}>
+                              <X size={16} color="var(--error-text)" />
+                            </button>
+                          </div>
+                        ) : (
+                          <span
+                            onClick={() => startEditing(index, 'quantity', item.quantity)}
+                            style={{ cursor: 'pointer', padding: '4px 8px', borderRadius: '4px' }}
+                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--ivory-darker)'}
+                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                          >
+                            {item.quantity || '-'} {item.unit || ''}
+                          </span>
+                        )}
                       </td>
-                      <td style={{ padding: '16px', textAlign: 'right' }}>
-                        {item.unitPrice ? `$${item.unitPrice.toFixed(2)}` : '-'}
+                      <td style={{ padding: '16px', textAlign: 'right', verticalAlign: 'middle' }}>
+                        {editingField?.index === index && editingField?.field === 'unitPrice' ? (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end' }}>
+                            <input
+                              type="number"
+                              value={tempValue}
+                              onChange={(e) => setTempValue(parseFloat(e.target.value) || 0)}
+                              onKeyDown={handleFieldKeyDown}
+                              autoFocus
+                              step="0.01"
+                              placeholder="0.00"
+                              style={{
+                                width: '90px',
+                                padding: '6px 8px',
+                                fontSize: '14px',
+                                border: '2px solid var(--golden-main)',
+                                borderRadius: '4px',
+                                textAlign: 'right',
+                              }}
+                            />
+                            <button onClick={saveFieldEdit} style={{ padding: '4px', cursor: 'pointer', background: 'none', border: 'none' }}>
+                              <Check size={16} color="var(--green-main)" />
+                            </button>
+                            <button onClick={cancelEditing} style={{ padding: '4px', cursor: 'pointer', background: 'none', border: 'none' }}>
+                              <X size={16} color="var(--error-text)" />
+                            </button>
+                          </div>
+                        ) : (
+                          <span
+                            onClick={() => startEditing(index, 'unitPrice', item.unitPrice)}
+                            style={{ cursor: 'pointer', padding: '4px 8px', borderRadius: '4px' }}
+                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--ivory-darker)'}
+                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                          >
+                            {item.unitPrice ? `$${item.unitPrice.toFixed(2)}` : '-'}
+                          </span>
+                        )}
                       </td>
-                      <td style={{ padding: '16px', textAlign: 'right', fontWeight: 600 }}>
-                        ${item.totalPrice.toFixed(2)}
+                      <td style={{ padding: '16px', textAlign: 'right', fontWeight: 600, verticalAlign: 'middle' }}>
+                        {editingField?.index === index && editingField?.field === 'totalPrice' ? (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end' }}>
+                            <input
+                              type="number"
+                              value={tempValue}
+                              onChange={(e) => setTempValue(parseFloat(e.target.value) || 0)}
+                              onKeyDown={handleFieldKeyDown}
+                              autoFocus
+                              step="0.01"
+                              placeholder="0.00"
+                              style={{
+                                width: '90px',
+                                padding: '6px 8px',
+                                fontSize: '14px',
+                                border: '2px solid var(--golden-main)',
+                                borderRadius: '4px',
+                                textAlign: 'right',
+                                fontWeight: 600,
+                              }}
+                            />
+                            <button onClick={saveFieldEdit} style={{ padding: '4px', cursor: 'pointer', background: 'none', border: 'none' }}>
+                              <Check size={16} color="var(--green-main)" />
+                            </button>
+                            <button onClick={cancelEditing} style={{ padding: '4px', cursor: 'pointer', background: 'none', border: 'none' }}>
+                              <X size={16} color="var(--error-text)" />
+                            </button>
+                          </div>
+                        ) : (
+                          <span
+                            onClick={() => startEditing(index, 'totalPrice', item.totalPrice)}
+                            style={{ cursor: 'pointer', padding: '4px 8px', borderRadius: '4px' }}
+                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--ivory-darker)'}
+                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                          >
+                            {item.totalPrice != null ? `$${item.totalPrice.toFixed(2)}` : '-'}
+                          </span>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -180,33 +366,173 @@ export default function ExtractedDataDisplay({
                       textAlign: 'right',
                       fontWeight: 700,
                       fontSize: '16px'
-                    }}>${data.total.toFixed(2)}</td>
+                    }}>{data.total != null ? `$${data.total.toFixed(2)}` : '$0.00'}</td>
                   </tr>
                 </tfoot>
               </table>
 
               {/* Mobile Card View */}
               <div style={{ display: window.innerWidth < 640 ? 'block' : 'none' }}>
-                {data.items.map((item, index) => (
+                {editedItems.map((item, index) => (
                   <div 
                     key={index}
                     style={{
                       padding: '16px',
-                      borderBottom: index === data.items.length - 1 ? 'none' : '1px solid var(--ivory-border)'
+                      borderBottom: index === editedItems.length - 1 ? 'none' : '1px solid var(--ivory-border)'
                     }}
                   >
-                    <div style={{ fontWeight: 600, marginBottom: '8px' }}>{item.name}</div>
-                    <div className="flex justify-between" style={{ fontSize: '14px', marginBottom: '4px' }}>
-                      <span style={{ color: 'var(--black-secondary)' }}>Quantity:</span>
-                      <span>{item.quantity} {item.unit || ''}</span>
+                    <div style={{ marginBottom: '12px' }}>
+                      <label style={{ 
+                        display: 'block', 
+                        fontSize: '12px', 
+                        fontWeight: 600, 
+                        textTransform: 'uppercase',
+                        color: 'var(--black-tertiary)',
+                        marginBottom: '6px'
+                      }}>
+                        Item Name
+                      </label>
+                      <EditableItemName
+                        value={item.name}
+                        onChange={(newName) => handleItemNameChange(index, newName)}
+                        suggestions={existingItemNames}
+                      />
                     </div>
-                    <div className="flex justify-between" style={{ fontSize: '14px', marginBottom: '4px' }}>
-                      <span style={{ color: 'var(--black-secondary)' }}>Unit Price:</span>
-                      <span>{item.unitPrice ? `$${item.unitPrice.toFixed(2)}` : '-'}</span>
+                    
+                    <div style={{ marginBottom: '8px' }}>
+                      <label style={{ 
+                        display: 'block', 
+                        fontSize: '12px', 
+                        fontWeight: 600,
+                        color: 'var(--black-secondary)',
+                        marginBottom: '4px'
+                      }}>
+                        Quantity
+                      </label>
+                      {editingField?.index === index && editingField?.field === 'quantity' ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <input
+                            type="number"
+                            value={tempValue}
+                            onChange={(e) => setTempValue(parseFloat(e.target.value) || 0)}
+                            onKeyDown={handleFieldKeyDown}
+                            autoFocus
+                            step="0.01"
+                            style={{
+                              flex: 1,
+                              padding: '8px',
+                              fontSize: '14px',
+                              border: '2px solid var(--golden-main)',
+                              borderRadius: '4px',
+                            }}
+                          />
+                          <span style={{ fontSize: '12px' }}>{item.unit || ''}</span>
+                          <button onClick={saveFieldEdit} style={{ padding: '4px', cursor: 'pointer', background: 'none', border: 'none' }}>
+                            <Check size={16} color="var(--green-main)" />
+                          </button>
+                          <button onClick={cancelEditing} style={{ padding: '4px', cursor: 'pointer', background: 'none', border: 'none' }}>
+                            <X size={16} color="var(--error-text)" />
+                          </button>
+                        </div>
+                      ) : (
+                        <div
+                          onClick={() => startEditing(index, 'quantity', item.quantity)}
+                          style={{ cursor: 'pointer', padding: '8px', borderRadius: '4px', backgroundColor: 'var(--ivory-bg)' }}
+                        >
+                          {item.quantity || '-'} {item.unit || ''}
+                        </div>
+                      )}
                     </div>
-                    <div className="flex justify-between" style={{ fontSize: '14px', fontWeight: 600 }}>
-                      <span style={{ color: 'var(--black-secondary)' }}>Total:</span>
-                      <span>${item.totalPrice.toFixed(2)}</span>
+                    
+                    <div style={{ marginBottom: '8px' }}>
+                      <label style={{ 
+                        display: 'block', 
+                        fontSize: '12px', 
+                        fontWeight: 600,
+                        color: 'var(--black-secondary)',
+                        marginBottom: '4px'
+                      }}>
+                        Unit Price
+                      </label>
+                      {editingField?.index === index && editingField?.field === 'unitPrice' ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <input
+                            type="number"
+                            value={tempValue}
+                            onChange={(e) => setTempValue(parseFloat(e.target.value) || 0)}
+                            onKeyDown={handleFieldKeyDown}
+                            autoFocus
+                            step="0.01"
+                            placeholder="0.00"
+                            style={{
+                              width: '100%',
+                              padding: '8px',
+                              fontSize: '14px',
+                              border: '2px solid var(--golden-main)',
+                              borderRadius: '4px',
+                            }}
+                          />
+                          <button onClick={saveFieldEdit} style={{ padding: '4px', cursor: 'pointer', background: 'none', border: 'none' }}>
+                            <Check size={16} color="var(--green-main)" />
+                          </button>
+                          <button onClick={cancelEditing} style={{ padding: '4px', cursor: 'pointer', background: 'none', border: 'none' }}>
+                            <X size={16} color="var(--error-text)" />
+                          </button>
+                        </div>
+                      ) : (
+                        <div
+                          onClick={() => startEditing(index, 'unitPrice', item.unitPrice)}
+                          style={{ cursor: 'pointer', padding: '8px', borderRadius: '4px', backgroundColor: 'var(--ivory-bg)' }}
+                        >
+                          {item.unitPrice ? `$${item.unitPrice.toFixed(2)}` : '-'}
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div style={{ marginBottom: '8px' }}>
+                      <label style={{ 
+                        display: 'block', 
+                        fontSize: '12px', 
+                        fontWeight: 600,
+                        color: 'var(--black-secondary)',
+                        marginBottom: '4px'
+                      }}>
+                        Total Price
+                      </label>
+                      {editingField?.index === index && editingField?.field === 'totalPrice' ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <input
+                            type="number"
+                            value={tempValue}
+                            onChange={(e) => setTempValue(parseFloat(e.target.value) || 0)}
+                            onKeyDown={handleFieldKeyDown}
+                            autoFocus
+                            step="0.01"
+                            placeholder="0.00"
+                            style={{
+                              width: '100%',
+                              padding: '8px',
+                              fontSize: '14px',
+                              border: '2px solid var(--golden-main)',
+                              borderRadius: '4px',
+                              fontWeight: 600,
+                            }}
+                          />
+                          <button onClick={saveFieldEdit} style={{ padding: '4px', cursor: 'pointer', background: 'none', border: 'none' }}>
+                            <Check size={16} color="var(--green-main)" />
+                          </button>
+                          <button onClick={cancelEditing} style={{ padding: '4px', cursor: 'pointer', background: 'none', border: 'none' }}>
+                            <X size={16} color="var(--error-text)" />
+                          </button>
+                        </div>
+                      ) : (
+                        <div
+                          onClick={() => startEditing(index, 'totalPrice', item.totalPrice)}
+                          style={{ cursor: 'pointer', padding: '8px', borderRadius: '4px', backgroundColor: 'var(--ivory-bg)', fontWeight: 600 }}
+                        >
+                          {item.totalPrice != null ? `$${item.totalPrice.toFixed(2)}` : '-'}
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -217,7 +543,7 @@ export default function ExtractedDataDisplay({
                 }}>
                   <div className="flex justify-between" style={{ fontWeight: 700, fontSize: '16px' }}>
                     <span>GRAND TOTAL:</span>
-                    <span>${data.total.toFixed(2)}</span>
+                    <span>{data.total != null ? `$${data.total.toFixed(2)}` : '$0.00'}</span>
                   </div>
                 </div>
               </div>
@@ -242,6 +568,6 @@ export default function ExtractedDataDisplay({
           to { transform: rotate(360deg); }
         }
       `}</style>
-    </Card>
+    </div>
   );
 }

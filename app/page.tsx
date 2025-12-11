@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Save, Menu } from 'lucide-react';
+import { Save, Menu, RotateCcw } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import ReceiptUpload from './components/ReceiptUpload';
 import StoreSelection from './components/StoreSelection';
@@ -9,9 +9,13 @@ import DatePicker from './components/DatePicker';
 import ExtractedDataDisplay, { ExtractedData } from './components/ExtractedDataDisplay';
 import ReceiptHistory from './components/ReceiptHistory';
 import Settings from './components/Settings';
+import ItemsList from './components/ItemsList';
+import ItemDetail from './components/ItemDetail';
 import Button from './components/Button';
+import Card from './components/Card';
+import { processItemsFromReceipts, getItemByName, ProcessedItem, getAllItemNames } from '@/lib/itemsProcessor';
 
-interface SavedReceipt {
+export interface SavedReceipt {
   id: string;
   storeNameScanned: string;
   storeNameSelected: string;
@@ -22,7 +26,7 @@ interface SavedReceipt {
 }
 
 export default function Home() {
-  const [currentView, setCurrentView] = useState<'home' | 'history' | 'settings'>('home');
+  const [currentView, setCurrentView] = useState<'home' | 'items' | 'history' | 'settings'>('home');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedStore, setSelectedStore] = useState('');
@@ -33,6 +37,10 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [receipts, setReceipts] = useState<SavedReceipt[]>([]);
   const [uploadKey, setUploadKey] = useState(0); // Key to force ReceiptUpload remount
+  const [existingItemNames, setExistingItemNames] = useState<string[]>([]);
+  
+  // Items view state
+  const [selectedItem, setSelectedItem] = useState<ProcessedItem | null>(null);
 
   // Load data from server on mount
   useEffect(() => {
@@ -46,6 +54,8 @@ export default function Home() {
       const data = await response.json();
       if (data.success) {
         setReceipts(data.receipts);
+        // Update existing item names whenever receipts change
+        setExistingItemNames(getAllItemNames(data.receipts));
       }
     } catch (error) {
       console.error('Error loading receipts:', error);
@@ -255,9 +265,33 @@ export default function Home() {
     alert('Local store settings cleared');
   };
 
-  const handleNavigate = (view: 'home' | 'history' | 'settings') => {
+  const handleNavigate = (view: 'home' | 'items' | 'history' | 'settings') => {
     setCurrentView(view);
     setSidebarOpen(false);
+    setSelectedItem(null); // Reset item selection when navigating
+  };
+
+  const handleItemClick = (itemName: string) => {
+    const item = getItemByName(receipts, itemName);
+    if (item) {
+      setSelectedItem(item);
+    }
+  };
+
+  const handleBackToItems = () => {
+    setSelectedItem(null);
+  };
+
+  const handleItemChange = (index: number, updatedItem: any) => {
+    if (!extractedData) return;
+    
+    const updatedItems = [...extractedData.items];
+    updatedItems[index] = updatedItem;
+    
+    setExtractedData({
+      ...extractedData,
+      items: updatedItems,
+    });
   };
 
   return (
@@ -297,47 +331,92 @@ export default function Home() {
                 />
 
                 {selectedFile && (
-                  <div className="grid-2">
-                    <StoreSelection
-                      selectedStore={selectedStore}
-                      onStoreChange={setSelectedStore}
-                      stores={stores}
-                      onAddStore={handleAddStore}
-                    />
-                    <DatePicker
-                      selectedDate={billingDate}
-                      onDateChange={setBillingDate}
-                    />
-                  </div>
-                )}
+                  <Card>
+                    <h2 className="card-title">Receipt Details</h2>
+                    
+                    {/* Store and Date Selection */}
+                    <div className="grid-2" style={{ marginBottom: '24px' }}>
+                      <div>
+                        <label style={{
+                          display: 'block',
+                          fontSize: '14px',
+                          fontWeight: 600,
+                          marginBottom: '8px',
+                          color: 'var(--black-text)'
+                        }}>
+                          Store
+                        </label>
+                        <StoreSelection
+                          selectedStore={selectedStore}
+                          onStoreChange={setSelectedStore}
+                          stores={stores}
+                          onAddStore={handleAddStore}
+                        />
+                      </div>
+                      <div>
+                        <label style={{
+                          display: 'block',
+                          fontSize: '14px',
+                          fontWeight: 600,
+                          marginBottom: '8px',
+                          color: 'var(--black-text)'
+                        }}>
+                          Billing Date
+                        </label>
+                        <DatePicker
+                          selectedDate={billingDate}
+                          onDateChange={setBillingDate}
+                        />
+                      </div>
+                    </div>
 
-                {selectedFile && (
-                  <ExtractedDataDisplay
-                    data={extractedData}
-                    isProcessing={isProcessing}
-                    error={error}
-                  />
-                )}
+                    {/* Extracted Data */}
+                    <div style={{ marginBottom: '24px' }}>
+                      <ExtractedDataDisplay
+                        data={extractedData}
+                        isProcessing={isProcessing}
+                        error={error}
+                        existingItemNames={existingItemNames}
+                        onItemChange={handleItemChange}
+                      />
+                    </div>
 
-                {extractedData && !isProcessing && !error && (
-                  <div className="flex flex-wrap gap-base justify-center">
-                    <Button 
-                      variant="success" 
-                      onClick={handleSaveReceipt}
-                      disabled={!selectedStore}
-                    >
-                      <Save size={20} />
-                      Save Receipt
-                    </Button>
-                    <Button 
-                      variant="secondary" 
-                      onClick={() => handleNavigate('history')}
-                    >
-                      View History ({receipts.length})
-                    </Button>
-                  </div>
+                    {/* Action Buttons */}
+                    {extractedData && !isProcessing && !error && (
+                      <div className="flex flex-wrap gap-base justify-center">
+                        <Button 
+                          variant="success" 
+                          onClick={handleSaveReceipt}
+                          disabled={!selectedStore || !billingDate}
+                        >
+                          <Save size={20} />
+                          Save Receipt
+                        </Button>
+                        <Button 
+                          variant="secondary" 
+                          onClick={resetForm}
+                        >
+                          <RotateCcw size={20} />
+                          Reset
+                        </Button>
+                      </div>
+                    )}
+                  </Card>
                 )}
               </div>
+            </>
+          )}
+
+          {currentView === 'items' && (
+            <>
+              {selectedItem ? (
+                <ItemDetail item={selectedItem} onBack={handleBackToItems} />
+              ) : (
+                <ItemsList 
+                  items={processItemsFromReceipts(receipts)}
+                  onItemClick={handleItemClick}
+                />
+              )}
             </>
           )}
 

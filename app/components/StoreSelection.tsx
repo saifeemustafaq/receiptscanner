@@ -5,7 +5,6 @@ import { Plus, X } from 'lucide-react';
 import Button from './Button';
 import Select from './Select';
 import Input from './Input';
-import Card from './Card';
 
 interface StoreSelectionProps {
   selectedStore: string;
@@ -64,37 +63,18 @@ export default function StoreSelection({
   };
 
   return (
-    <Card>
-      <h2 className="card-title">Store Information</h2>
-      
+    <div>
       {!showAddNew ? (
         <Select
-          label="Store Name"
+          label=""
           options={storeOptions}
           value={selectedStore}
           onChange={handleSelectChange}
         />
       ) : (
         <div className="flex flex-col gap-base">
-          <div className="flex items-center justify-between">
-            <h3 style={{ fontSize: '18px', fontWeight: 600 }}>Add New Store</h3>
-            <button
-              onClick={handleCancel}
-              style={{
-                color: 'var(--black-tertiary)',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                padding: '4px'
-              }}
-              aria-label="Cancel"
-            >
-              <X size={20} />
-            </button>
-          </div>
-          
           <Input
-            label="Store Name"
+            label=""
             value={newStoreName}
             onChange={(e) => {
               setNewStoreName(e.target.value);
@@ -107,7 +87,7 @@ export default function StoreSelection({
           <div className="flex gap-md">
             <Button variant="success" onClick={handleAddStore}>
               <Plus size={20} />
-              Add Store
+              Add
             </Button>
             <Button variant="secondary" onClick={handleCancel}>
               Cancel
@@ -115,6 +95,6 @@ export default function StoreSelection({
           </div>
         </div>
       )}
-    </Card>
+    </div>
   );
 }
