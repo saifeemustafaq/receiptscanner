@@ -39,3 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Data files - keep structure but ignore actual receipts
+/data/receipts/*.json
+!/data/receipts/receipts_data.json
