@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { Search, TrendingUp, ShoppingBag, ChevronRight, Eye } from 'lucide-react';
+import { Search, ShoppingBag, ChevronRight } from 'lucide-react';
 import Card from './Card';
 import { ProcessedItem } from '@/lib/itemsProcessor';
 
@@ -24,6 +24,15 @@ export default function ItemsList({ items, onItemClick }: ItemsListProps) {
   const formatPrice = (price: number, unit: string | null) => {
     const priceStr = `$${price.toFixed(2)}`;
     return unit ? `${priceStr}/${unit}` : priceStr;
+  };
+
+  const getPriceRange = (item: ProcessedItem) => {
+    const prices = item.priceHistory.map(entry => entry.price);
+    const maxPrice = Math.max(...prices);
+    const minPrice = Math.min(...prices);
+    const isSamePrice = maxPrice === minPrice;
+    
+    return { maxPrice, minPrice, isSamePrice };
   };
 
   return (
@@ -67,137 +76,168 @@ export default function ItemsList({ items, onItemClick }: ItemsListProps) {
         ) : (
           <div style={{ 
             display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
             gap: '16px'
           }}>
-            {filteredItems.map(item => (
-              <Card 
-                key={item.normalizedName}
-                className="item-card"
-                style={{ cursor: 'pointer', transition: 'all 0.2s' }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-4px)';
-                  e.currentTarget.style.boxShadow = 'var(--shadow-retro-hover)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = 'var(--shadow-retro)';
-                }}
-                onClick={() => onItemClick(item.normalizedName)}
-              >
-                <div className="flex flex-col gap-sm">
-                  {/* Item Name with arrow */}
-                  <div className="flex items-center justify-between" style={{ marginBottom: '8px' }}>
+            {filteredItems.map(item => {
+              const { maxPrice, minPrice, isSamePrice } = getPriceRange(item);
+              const purchaseCount = item.priceHistory.length;
+              
+              return (
+                <Card 
+                  key={item.normalizedName}
+                  className="item-card"
+                  style={{ cursor: 'pointer', transition: 'all 0.2s' }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-4px)';
+                    e.currentTarget.style.boxShadow = 'var(--shadow-retro-hover)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = 'var(--shadow-retro)';
+                  }}
+                  onClick={() => onItemClick(item.normalizedName)}
+                >
+                  <div className="flex flex-col gap-sm">
+                    {/* Item Name */}
                     <h3 style={{ 
-                      fontSize: '18px', 
+                      fontSize: '20px', 
                       fontWeight: 600,
                       color: 'var(--black-text)',
-                      flex: 1
+                      marginBottom: '4px'
                     }}>
                       {item.name}
                     </h3>
-                    <ChevronRight size={20} style={{ color: 'var(--golden-main)' }} />
-                  </div>
 
-                  {/* Latest Price */}
-                  <div style={{ 
-                    padding: '12px',
-                    backgroundColor: 'var(--ivory-bg)',
-                    borderRadius: '4px',
-                    border: '1px solid var(--ivory-border)'
-                  }}>
+                    {/* Purchase Count */}
                     <p style={{ 
-                      fontSize: '24px', 
-                      fontWeight: 700,
-                      color: 'var(--golden-main)',
-                      marginBottom: '4px'
+                      fontSize: '14px',
+                      color: 'var(--black-tertiary)',
+                      marginBottom: '12px'
                     }}>
-                      {formatPrice(item.latestPrice, item.latestUnit)}
+                      Purchased {purchaseCount} {purchaseCount === 1 ? 'time' : 'times'}
                     </p>
-                    <p style={{ 
-                      fontSize: '12px',
-                      color: 'var(--black-tertiary)'
-                    }}>
-                      Latest Price
-                    </p>
-                  </div>
 
-                  {/* Store & Date */}
-                  <div className="flex justify-between items-center" style={{ 
-                    paddingTop: '8px',
-                    borderTop: '1px solid var(--ivory-border)'
-                  }}>
-                    <div>
-                      <p style={{ fontSize: '12px', color: 'var(--black-tertiary)' }}>
-                        Store
-                      </p>
-                      <p style={{ fontSize: '14px', fontWeight: 500 }}>
-                        {item.latestStore}
-                      </p>
+                    {/* Price Range */}
+                    <div style={{ 
+                      padding: '16px',
+                      backgroundColor: 'var(--ivory-bg)',
+                      borderRadius: '4px',
+                      border: '2px solid var(--black-text)',
+                      marginBottom: '12px'
+                    }}>
+                      {isSamePrice ? (
+                        <div>
+                          <p style={{ 
+                            fontSize: '12px',
+                            color: 'var(--black-tertiary)',
+                            marginBottom: '6px'
+                          }}>
+                            Price
+                          </p>
+                          <p style={{ 
+                            fontSize: '28px', 
+                            fontWeight: 700,
+                            color: '#2B5F8F',
+                          }}>
+                            {formatPrice(maxPrice, item.latestUnit)}
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="flex justify-between items-center" style={{ gap: '16px' }}>
+                          <div style={{ flex: 1 }}>
+                            <p style={{ 
+                              fontSize: '11px',
+                              color: 'var(--black-tertiary)',
+                              marginBottom: '4px',
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.05em'
+                            }}>
+                              Min
+                            </p>
+                            <p style={{ 
+                              fontSize: '20px', 
+                              fontWeight: 700,
+                              color: '#2D5016',
+                            }}>
+                              {formatPrice(minPrice, item.latestUnit)}
+                            </p>
+                          </div>
+                          <div style={{ 
+                            width: '2px', 
+                            height: '40px', 
+                            backgroundColor: 'var(--ivory-border)' 
+                          }} />
+                          <div style={{ flex: 1, textAlign: 'right' }}>
+                            <p style={{ 
+                              fontSize: '11px',
+                              color: 'var(--black-tertiary)',
+                              marginBottom: '4px',
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.05em'
+                            }}>
+                              Max
+                            </p>
+                            <p style={{ 
+                              fontSize: '20px', 
+                              fontWeight: 700,
+                              color: '#8B3A3A',
+                            }}>
+                              {formatPrice(maxPrice, item.latestUnit)}
+                            </p>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <p style={{ fontSize: '12px', color: 'var(--black-tertiary)' }}>
-                        Last Updated
-                      </p>
-                      <p style={{ fontSize: '14px', fontWeight: 500 }}>
+
+                    {/* Store & Date Info */}
+                    <div className="flex justify-between items-center" style={{ 
+                      fontSize: '13px',
+                      color: 'var(--black-secondary)',
+                      marginBottom: '12px'
+                    }}>
+                      <span>
+                        <strong>{item.latestStore}</strong>
+                      </span>
+                      <span>
                         {new Date(item.latestDate + 'T00:00:00').toLocaleDateString('en-US', {
                           timeZone: 'America/Los_Angeles',
                           month: 'short',
                           day: 'numeric'
                         })}
-                      </p>
+                      </span>
                     </div>
-                  </div>
 
-                  {/* Price History CTA */}
-                  <div style={{
-                    marginTop: '8px',
-                    padding: '10px 12px',
-                    backgroundColor: item.priceHistory.length > 1 
-                      ? 'var(--golden-main)' 
-                      : 'var(--ivory-darker)',
-                    borderRadius: '4px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    border: '2px solid var(--black-text)'
-                  }}>
-                    <div className="flex items-center gap-xs">
-                      {item.priceHistory.length > 1 ? (
-                        <>
-                          <TrendingUp size={16} style={{ color: 'var(--black-text)' }} />
-                          <span style={{ 
-                            fontSize: '14px', 
-                            fontWeight: 600,
-                            color: 'var(--black-text)'
-                          }}>
-                            {item.priceHistory.length} price variations
-                          </span>
-                        </>
-                      ) : (
-                        <>
-                          <Eye size={16} style={{ color: 'var(--black-tertiary)' }} />
-                          <span style={{ 
-                            fontSize: '14px', 
-                            fontWeight: 500,
-                            color: 'var(--black-secondary)'
-                          }}>
-                            View details
-                          </span>
-                        </>
-                      )}
-                    </div>
-                    <span style={{ 
-                      fontSize: '12px', 
-                      color: item.priceHistory.length > 1 ? 'var(--black-text)' : 'var(--black-tertiary)',
-                      fontWeight: 600
+                    {/* More Info Button */}
+                    <div style={{
+                      padding: '12px 16px',
+                      backgroundColor: 'transparent',
+                      borderRadius: '4px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      border: '2px solid var(--black-text)',
+                      transition: 'all 0.2s'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'var(--golden-main)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'transparent';
                     }}>
-                      Click to view →
-                    </span>
+                      <span style={{ 
+                        fontSize: '14px', 
+                        fontWeight: 600,
+                        color: 'var(--black-text)'
+                      }}>
+                        More Info
+                      </span>
+                      <ChevronRight size={18} style={{ color: 'var(--black-text)' }} />
+                    </div>
                   </div>
-                </div>
-              </Card>
-            ))}
+                </Card>
+              );
+            })}
           </div>
         )}
       </div>

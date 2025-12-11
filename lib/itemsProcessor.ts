@@ -155,3 +155,14 @@ export function searchItems(
   );
 }
 
+/**
+ * Get all unique item names from all receipts
+ * Returns a sorted array of item names (using original casing from first occurrence)
+ */
+export function getAllItemNames(receipts: SavedReceipt[]): string[] {
+  const allItems = processItemsFromReceipts(receipts);
+  return allItems.map(item => item.name).sort((a, b) => 
+    a.toLowerCase().localeCompare(b.toLowerCase())
+  );
+}
+
