@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, FileText, ShoppingBag, Settings as SettingsIcon } from 'lucide-react';
+import { Home, FileText, ShoppingBag, BarChart3, Settings as SettingsIcon } from 'lucide-react';
 
 interface SidebarProps {
   isOpen?: boolean;
@@ -32,7 +32,7 @@ export default function Sidebar({ isOpen = true, onClose }: SidebarProps) {
       <nav className="sidebar-nav">
         <Link 
           href="/" 
-          className={`nav-item ${isActive('/') && !pathname.includes('/items') && !pathname.includes('/history') && !pathname.includes('/settings') ? 'active' : ''}`}
+          className={`nav-item ${isActive('/') && !pathname.includes('/items') && !pathname.includes('/history') && !pathname.includes('/settings') && !pathname.includes('/insights') ? 'active' : ''}`}
           onClick={handleClick}
         >
           <Home size={20} />
@@ -46,6 +46,15 @@ export default function Sidebar({ isOpen = true, onClose }: SidebarProps) {
         >
           <ShoppingBag size={20} />
           <span>Items</span>
+        </Link>
+
+        <Link 
+          href="/insights" 
+          className={`nav-item ${isActive('/insights') ? 'active' : ''}`}
+          onClick={handleClick}
+        >
+          <BarChart3 size={20} />
+          <span>Insights</span>
         </Link>
         
         <Link 

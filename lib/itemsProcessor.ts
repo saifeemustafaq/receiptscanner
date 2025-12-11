@@ -1,4 +1,4 @@
-import { SavedReceipt } from '@/app/page';
+import { SavedReceipt } from './types';
 
 export interface ItemPriceEntry {
   store: string;

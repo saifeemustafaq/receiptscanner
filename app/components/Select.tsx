@@ -3,10 +3,11 @@ import React from 'react';
 interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
   label?: string;
   error?: string;
-  options: { value: string; label: string }[];
+  options?: { value: string; label: string }[];
+  children?: React.ReactNode;
 }
 
-export default function Select({ label, error, options, className = '', ...props }: SelectProps) {
+export default function Select({ label, error, options, children, className = '', ...props }: SelectProps) {
   return (
     <div className="input-group">
       {label && (
@@ -19,11 +20,15 @@ export default function Select({ label, error, options, className = '', ...props
         style={{ cursor: 'pointer' }}
         {...props}
       >
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
+        {options ? (
+          options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))
+        ) : (
+          children
+        )}
       </select>
       {error && (
         <span className="input-error">{error}</span>
