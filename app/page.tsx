@@ -1,93 +1,79 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Save, Menu, RotateCcw } from 'lucide-react';
-import Sidebar from './components/Sidebar';
+import { Save, RotateCcw } from 'lucide-react';
 import ReceiptUpload from './components/ReceiptUpload';
 import StoreSelection from './components/StoreSelection';
 import DatePicker from './components/DatePicker';
 import ExtractedDataDisplay, { ExtractedData } from './components/ExtractedDataDisplay';
-import ReceiptHistory from './components/ReceiptHistory';
-import Settings from './components/Settings';
-import ItemsList from './components/ItemsList';
-import ItemDetail from './components/ItemDetail';
 import Button from './components/Button';
 import Card from './components/Card';
-import { processItemsFromReceipts, getItemByName, ProcessedItem, getAllItemNames } from '@/lib/itemsProcessor';
-
-export interface SavedReceipt {
-  id: string;
-  storeNameScanned: string;
-  storeNameSelected: string;
-  billingDate: string;      // Date on the receipt
-  uploadDate: string;        // Date when uploaded
-  extractedData: ExtractedData;
-  timestamp: string;
-}
+import { getAllItemNames } from '@/lib/itemsProcessor';
+import { useReceipts } from '@/lib/hooks/useReceipts';
+import { useStores } from '@/lib/hooks/useStores';
+import { SavedReceipt, QueueItem } from '@/lib/types';
 
 export default function Home() {
-  const [currentView, setCurrentView] = useState<'home' | 'items' | 'history' | 'settings'>('home');
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedStore, setSelectedStore] = useState('');
-  const [billingDate, setBillingDate] = useState(''); // Empty by default, will be filled from receipt
-  const [stores, setStores] = useState<string[]>([]);
+  const [billingDate, setBillingDate] = useState('');
   const [extractedData, setExtractedData] = useState<ExtractedData | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [receipts, setReceipts] = useState<SavedReceipt[]>([]);
-  const [uploadKey, setUploadKey] = useState(0); // Key to force ReceiptUpload remount
+  const [uploadKey, setUploadKey] = useState(0);
   const [existingItemNames, setExistingItemNames] = useState<string[]>([]);
   
-  // Items view state
-  const [selectedItem, setSelectedItem] = useState<ProcessedItem | null>(null);
+  // Multi-receipt queue state
+  const [receiptQueue, setReceiptQueue] = useState<QueueItem[]>([]);
+  const [currentQueueIndex, setCurrentQueueIndex] = useState(0);
+  const [isProcessingQueue, setIsProcessingQueue] = useState(false);
 
-  // Load data from server on mount
+  // Use custom hooks
+  const { receipts, loadReceipts } = useReceipts();
+  const { stores, addStore: handleAddStore } = useStores();
+
+  // Update existing item names when receipts change
   useEffect(() => {
-    loadReceipts();
-    loadStores();
-  }, []);
-
-  const loadReceipts = async () => {
-    try {
-      const response = await fetch('/api/receipts');
-      const data = await response.json();
-      if (data.success) {
-        setReceipts(data.receipts);
-        // Update existing item names whenever receipts change
-        setExistingItemNames(getAllItemNames(data.receipts));
-      }
-    } catch (error) {
-      console.error('Error loading receipts:', error);
+    if (receipts.length > 0) {
+      setExistingItemNames(getAllItemNames(receipts));
     }
-  };
+  }, [receipts]);
 
-  const loadStores = () => {
-    const savedStores = localStorage.getItem('stores');
-    if (savedStores) {
-      try {
-        setStores(JSON.parse(savedStores));
-      } catch (e) {
-        setStores(['Walmart', 'Target', 'Costco', 'Whole Foods', 'Kroger']);
-      }
-    } else {
-      setStores(['Walmart', 'Target', 'Costco', 'Whole Foods', 'Kroger']);
-    }
-  };
-
-  // Save stores to localStorage whenever they change
+  // Process receipt when file is selected (single mode only)
   useEffect(() => {
-    if (stores.length > 0) {
-      localStorage.setItem('stores', JSON.stringify(stores));
-    }
-  }, [stores]);
-
-  // Process receipt when file is selected
-  useEffect(() => {
-    if (selectedFile) {
+    if (selectedFile && !isProcessingQueue) {
       processReceipt(selectedFile);
     }
   }, [selectedFile]);
+
+  // Handle parallel receipt queue processing
+  useEffect(() => {
+    if (isProcessingQueue && receiptQueue.length > 0) {
+      receiptQueue.forEach((item, index) => {
+        if (item.status === 'pending') {
+          processReceiptInQueue(item.file, index);
+        }
+      });
+    }
+  }, [isProcessingQueue, receiptQueue]);
+
+  // Load data from queue when moving to next receipt
+  useEffect(() => {
+    if (isProcessingQueue && receiptQueue.length > 0 && currentQueueIndex < receiptQueue.length) {
+      const currentItem = receiptQueue[currentQueueIndex];
+      
+      if (currentItem.status === 'ready' && currentItem.data) {
+        setExtractedData(currentItem.data);
+        setSelectedFile(currentItem.file);
+        if (currentItem.data.receiptDate) {
+          setBillingDate(currentItem.data.receiptDate);
+        }
+      } else if (currentItem.status === 'error') {
+        setError(currentItem.error || 'Failed to process receipt');
+        setSelectedFile(currentItem.file);
+      }
+    }
+  }, [currentQueueIndex, receiptQueue, isProcessingQueue]);
 
   const processReceipt = async (file: File) => {
     setIsProcessing(true);
@@ -111,7 +97,6 @@ export default function Home() {
       const result = await response.json();
       setExtractedData(result.data);
       
-      // Auto-populate billing date from extracted receipt date
       if (result.data.receiptDate) {
         setBillingDate(result.data.receiptDate);
       }
@@ -123,12 +108,62 @@ export default function Home() {
     }
   };
 
-  const handleAddStore = (newStore: string) => {
-    setStores([...stores, newStore]);
-  };
+  const processReceiptInQueue = async (file: File, queueIndex: number) => {
+    setReceiptQueue(prev => {
+      const updated = [...prev];
+      updated[queueIndex] = { ...updated[queueIndex], status: 'processing' };
+      return updated;
+    });
 
-  const handleDeleteStore = (store: string) => {
-    setStores(stores.filter(s => s !== store));
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch('/api/process-receipt', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to process receipt');
+      }
+
+      const result = await response.json();
+      
+      setReceiptQueue(prev => {
+        const updated = [...prev];
+        updated[queueIndex] = {
+          ...updated[queueIndex],
+          status: 'ready',
+          data: result.data
+        };
+        return updated;
+      });
+
+      if (queueIndex === currentQueueIndex) {
+        setExtractedData(result.data);
+        if (result.data.receiptDate) {
+          setBillingDate(result.data.receiptDate);
+        }
+      }
+    } catch (err: any) {
+      console.error(`Error processing receipt ${queueIndex + 1}:`, err);
+      
+      setReceiptQueue(prev => {
+        const updated = [...prev];
+        updated[queueIndex] = {
+          ...updated[queueIndex],
+          status: 'error',
+          error: err.message || 'Failed to process receipt'
+        };
+        return updated;
+      });
+
+      if (queueIndex === currentQueueIndex) {
+        setError(err.message || 'Failed to process receipt');
+      }
+    }
   };
 
   const handleSaveReceipt = async () => {
@@ -138,11 +173,10 @@ export default function Home() {
     }
 
     if (!billingDate) {
-      alert('Please enter the billing date from the receipt');
+      alert('Please enter the receipt date');
       return;
     }
 
-    // Get current date in Pacific Time
     const now = new Date();
     const pacificTimeString = now.toLocaleString('en-US', { 
       timeZone: 'America/Los_Angeles',
@@ -157,8 +191,8 @@ export default function Home() {
       id: Date.now().toString(),
       storeNameScanned: extractedData.storeNameScanned || 'Unknown',
       storeNameSelected: selectedStore,
-      billingDate: billingDate,        // Date from the receipt
-      uploadDate: uploadDate,          // Today's date in Pacific Time
+      billingDate: billingDate,
+      uploadDate: uploadDate,
       extractedData,
       timestamp: new Date().toISOString(),
     };
@@ -173,13 +207,42 @@ export default function Home() {
       const result = await response.json();
 
       if (result.success) {
-        alert('Receipt saved successfully!');
-        
-        // Reload receipts
         await loadReceipts();
         
-        // Reset form to default upload screen
-        resetForm();
+        if (isProcessingQueue && receiptQueue.length > 0) {
+          const nextIndex = currentQueueIndex + 1;
+          
+          if (nextIndex < receiptQueue.length) {
+            const nextItem = receiptQueue[nextIndex];
+            
+            if (nextItem.status === 'ready') {
+              alert(`Receipt ${currentQueueIndex + 1} of ${receiptQueue.length} saved! Moving to next receipt...`);
+            } else if (nextItem.status === 'processing') {
+              alert(`Receipt ${currentQueueIndex + 1} of ${receiptQueue.length} saved! Next receipt is still processing, please wait...`);
+            } else if (nextItem.status === 'error') {
+              alert(`Receipt ${currentQueueIndex + 1} of ${receiptQueue.length} saved! Note: Next receipt had an error.`);
+            }
+            
+            setExtractedData(null);
+            setSelectedStore('');
+            setBillingDate('');
+            setError(null);
+            setCurrentQueueIndex(nextIndex);
+          } else {
+            const successCount = receiptQueue.filter(item => item.status === 'ready').length;
+            const errorCount = receiptQueue.filter(item => item.status === 'error').length;
+            
+            if (errorCount > 0) {
+              alert(`Queue complete! ${successCount} receipts saved successfully. ${errorCount} failed.`);
+            } else {
+              alert(`All ${receiptQueue.length} receipts saved successfully!`);
+            }
+            resetForm();
+          }
+        } else {
+          alert('Receipt saved successfully!');
+          resetForm();
+        }
       } else {
         alert('Failed to save receipt: ' + result.error);
       }
@@ -193,93 +256,37 @@ export default function Home() {
     setSelectedFile(null);
     setExtractedData(null);
     setSelectedStore('');
-    setBillingDate(''); // Reset to empty
+    setBillingDate('');
     setError(null);
-    setUploadKey(prev => prev + 1); // Force ReceiptUpload to remount
+    setUploadKey(prev => prev + 1);
+    setReceiptQueue([]);
+    setCurrentQueueIndex(0);
+    setIsProcessingQueue(false);
   };
 
-  const handleDeleteReceipt = async (id: string) => {
-    try {
-      const response = await fetch(`/api/receipts?id=${id}`, {
-        method: 'DELETE',
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        await loadReceipts();
-      } else {
-        alert('Failed to delete receipt: ' + result.error);
-      }
-    } catch (error) {
-      console.error('Error deleting receipt:', error);
-      alert('Failed to delete receipt');
-    }
-  };
-
-  const handleUpdateReceipt = async (id: string, updates: any) => {
-    try {
-      const response = await fetch('/api/receipts', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, updates }),
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        await loadReceipts();
-      } else {
-        alert('Failed to update receipt: ' + result.error);
-      }
-    } catch (error) {
-      console.error('Error updating receipt:', error);
-      alert('Failed to update receipt');
-    }
-  };
-
-  const handleExportReceipts = async () => {
-    if (receipts.length === 0) {
-      alert('No receipts to export');
+  const handleReceiptSelect = (files: File[]) => {
+    if (files.length === 0) {
+      setSelectedFile(null);
+      setReceiptQueue([]);
+      setIsProcessingQueue(false);
       return;
     }
 
-    try {
-      const response = await fetch('/api/receipts?action=export&format=json');
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `receipts-${new Date().toISOString().split('T')[0]}.json`;
-      link.click();
-      URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Error exporting receipts:', error);
-      alert('Failed to export receipts');
+    if (files.length === 1) {
+      setSelectedFile(files[0]);
+      setReceiptQueue([]);
+      setIsProcessingQueue(false);
+    } else {
+      const queueItems: QueueItem[] = files.map(file => ({
+        file,
+        status: 'pending',
+      }));
+      
+      setReceiptQueue(queueItems);
+      setCurrentQueueIndex(0);
+      setIsProcessingQueue(true);
+      setSelectedFile(files[0]);
     }
-  };
-
-  const handleClearAllData = () => {
-    localStorage.removeItem('stores');
-    setStores(['Walmart', 'Target', 'Costco', 'Whole Foods', 'Kroger']);
-    alert('Local store settings cleared');
-  };
-
-  const handleNavigate = (view: 'home' | 'items' | 'history' | 'settings') => {
-    setCurrentView(view);
-    setSidebarOpen(false);
-    setSelectedItem(null); // Reset item selection when navigating
-  };
-
-  const handleItemClick = (itemName: string) => {
-    const item = getItemByName(receipts, itemName);
-    if (item) {
-      setSelectedItem(item);
-    }
-  };
-
-  const handleBackToItems = () => {
-    setSelectedItem(null);
   };
 
   const handleItemChange = (index: number, updatedItem: any) => {
@@ -295,151 +302,97 @@ export default function Home() {
   };
 
   return (
-    <div className="app-container">
-      {/* Mobile Menu Button */}
-      <button
-        className="mobile-menu-btn"
-        onClick={() => setSidebarOpen(!sidebarOpen)}
-      >
-        <Menu size={24} />
-      </button>
+    <>
+      <header className="page-header">
+        <h1 className="page-title">Receipt Scanner</h1>
+        <p className="page-subtitle">
+          Scan, extract, and organize your receipts
+        </p>
+      </header>
 
-      {/* Sidebar */}
-      <Sidebar 
-        currentView={currentView}
-        onNavigate={handleNavigate}
-        isOpen={sidebarOpen}
-      />
+      <div className="content-section">
+        <ReceiptUpload 
+          key={uploadKey}
+          onReceiptSelect={handleReceiptSelect}
+          selectedFile={selectedFile}
+          queueInfo={isProcessingQueue && receiptQueue.length > 1 ? {
+            current: currentQueueIndex + 1,
+            total: receiptQueue.length,
+            statuses: receiptQueue.map(item => item.status)
+          } : null}
+        />
 
-      {/* Main Content */}
-      <main className="main-content">
-        <div className="content-wrapper">
-          {currentView === 'home' && (
-            <>
-              <header className="page-header">
-                <h1 className="page-title">Receipt Scanner</h1>
-                <p className="page-subtitle">
-                  Scan, extract, and organize your receipts
-                </p>
-              </header>
-
-              <div className="content-section">
-                <ReceiptUpload 
-                  key={uploadKey}
-                  onReceiptSelect={setSelectedFile}
-                  selectedFile={selectedFile}
+        {selectedFile && (
+          <Card>
+            <h2 className="card-title">Receipt Details</h2>
+            
+            <div className="grid-2" style={{ marginBottom: '24px' }}>
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  marginBottom: '8px',
+                  color: 'var(--black-text)'
+                }}>
+                  Store
+                </label>
+                <StoreSelection
+                  selectedStore={selectedStore}
+                  onStoreChange={setSelectedStore}
+                  stores={stores}
+                  onAddStore={handleAddStore}
                 />
-
-                {selectedFile && (
-                  <Card>
-                    <h2 className="card-title">Receipt Details</h2>
-                    
-                    {/* Store and Date Selection */}
-                    <div className="grid-2" style={{ marginBottom: '24px' }}>
-                      <div>
-                        <label style={{
-                          display: 'block',
-                          fontSize: '14px',
-                          fontWeight: 600,
-                          marginBottom: '8px',
-                          color: 'var(--black-text)'
-                        }}>
-                          Store
-                        </label>
-                        <StoreSelection
-                          selectedStore={selectedStore}
-                          onStoreChange={setSelectedStore}
-                          stores={stores}
-                          onAddStore={handleAddStore}
-                        />
-                      </div>
-                      <div>
-                        <label style={{
-                          display: 'block',
-                          fontSize: '14px',
-                          fontWeight: 600,
-                          marginBottom: '8px',
-                          color: 'var(--black-text)'
-                        }}>
-                          Billing Date
-                        </label>
-                        <DatePicker
-                          selectedDate={billingDate}
-                          onDateChange={setBillingDate}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Extracted Data */}
-                    <div style={{ marginBottom: '24px' }}>
-                      <ExtractedDataDisplay
-                        data={extractedData}
-                        isProcessing={isProcessing}
-                        error={error}
-                        existingItemNames={existingItemNames}
-                        onItemChange={handleItemChange}
-                      />
-                    </div>
-
-                    {/* Action Buttons */}
-                    {extractedData && !isProcessing && !error && (
-                      <div className="flex flex-wrap gap-base justify-center">
-                        <Button 
-                          variant="success" 
-                          onClick={handleSaveReceipt}
-                          disabled={!selectedStore || !billingDate}
-                        >
-                          <Save size={20} />
-                          Save Receipt
-                        </Button>
-                        <Button 
-                          variant="secondary" 
-                          onClick={resetForm}
-                        >
-                          <RotateCcw size={20} />
-                          Reset
-                        </Button>
-                      </div>
-                    )}
-                  </Card>
-                )}
               </div>
-            </>
-          )}
-
-          {currentView === 'items' && (
-            <>
-              {selectedItem ? (
-                <ItemDetail item={selectedItem} onBack={handleBackToItems} />
-              ) : (
-                <ItemsList 
-                  items={processItemsFromReceipts(receipts)}
-                  onItemClick={handleItemClick}
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  marginBottom: '8px',
+                  color: 'var(--black-text)'
+                }}>
+                  Receipt Date
+                </label>
+                <DatePicker
+                  selectedDate={billingDate}
+                  onDateChange={setBillingDate}
                 />
-              )}
-            </>
-          )}
+              </div>
+            </div>
 
-          {currentView === 'history' && (
-            <ReceiptHistory
-              receipts={receipts}
-              stores={stores}
-              onDelete={handleDeleteReceipt}
-              onUpdate={handleUpdateReceipt}
-              onExport={handleExportReceipts}
-            />
-          )}
+            <div style={{ marginBottom: '24px' }}>
+              <ExtractedDataDisplay
+                data={extractedData}
+                isProcessing={isProcessing}
+                error={error}
+                existingItemNames={existingItemNames}
+                onItemChange={handleItemChange}
+              />
+            </div>
 
-          {currentView === 'settings' && (
-            <Settings
-              stores={stores}
-              onAddStore={handleAddStore}
-              onDeleteStore={handleDeleteStore}
-              onClearAllData={handleClearAllData}
-            />
-          )}
-        </div>
-      </main>
-    </div>
+            {extractedData && !isProcessing && !error && (
+              <div className="flex flex-wrap gap-base justify-center">
+                <Button 
+                  variant="success" 
+                  onClick={handleSaveReceipt}
+                  disabled={!selectedStore || !billingDate}
+                >
+                  <Save size={20} />
+                  Save Receipt
+                </Button>
+                <Button 
+                  variant="secondary" 
+                  onClick={resetForm}
+                >
+                  <RotateCcw size={20} />
+                  Reset
+                </Button>
+              </div>
+            )}
+          </Card>
+        )}
+      </div>
+    </>
   );
 }

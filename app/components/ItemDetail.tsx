@@ -1,7 +1,7 @@
 'use client';
 
-import React from 'react';
-import { ArrowLeft, Calendar, Store, DollarSign, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import React, { useState } from 'react';
+import { ArrowLeft, Calendar, Store, DollarSign, TrendingUp, TrendingDown, Minus, Edit2, Check, X } from 'lucide-react';
 import Card from './Card';
 import Button from './Button';
 import { ProcessedItem } from '@/lib/itemsProcessor';
@@ -9,9 +9,13 @@ import { ProcessedItem } from '@/lib/itemsProcessor';
 interface ItemDetailProps {
   item: ProcessedItem;
   onBack: () => void;
+  onItemRename?: (oldName: string, newName: string) => Promise<void>;
 }
 
-export default function ItemDetail({ item, onBack }: ItemDetailProps) {
+export default function ItemDetail({ item, onBack, onItemRename }: ItemDetailProps) {
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editedName, setEditedName] = useState(item.name);
+  const [isSaving, setIsSaving] = useState(false);
   const formatPrice = (price: number, unit: string | null) => {
     const priceStr = `$${price.toFixed(2)}`;
     return unit ? `${priceStr}/${unit}` : priceStr;
@@ -28,14 +32,118 @@ export default function ItemDetail({ item, onBack }: ItemDetailProps) {
     return diff > 0 ? 'up' : 'down';
   };
 
+  const handleSaveName = async () => {
+    const trimmedName = editedName.trim();
+    
+    if (!trimmedName) {
+      alert('Item name cannot be empty');
+      return;
+    }
+
+    if (trimmedName === item.name) {
+      setIsEditingName(false);
+      return;
+    }
+
+    if (onItemRename) {
+      setIsSaving(true);
+      try {
+        await onItemRename(item.name, trimmedName);
+        setIsEditingName(false);
+      } catch (error) {
+        console.error('Error renaming item:', error);
+        alert('Failed to rename item');
+      } finally {
+        setIsSaving(false);
+      }
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditedName(item.name);
+    setIsEditingName(false);
+  };
+
   return (
-    <div>
-      <header className="page-header">
-        <Button variant="secondary" onClick={onBack} style={{ marginBottom: '16px' }}>
+    <div style={{ paddingTop: '80px' }}>
+      {/* Fixed Header Bar with Back Button */}
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: '72px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'flex-end',
+        padding: '0 24px',
+        backgroundColor: 'var(--ivory-bg)',
+        borderBottom: '2px solid var(--black-text)',
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+        zIndex: 100,
+      }}>
+        <Button variant="secondary" onClick={onBack}>
           <ArrowLeft size={20} />
           Back to Items
         </Button>
-        <h1 className="page-title">{item.name}</h1>
+      </div>
+
+      <header className="page-header" style={{ paddingTop: 0 }}>
+        {isEditingName ? (
+          <div style={{ marginBottom: '16px' }}>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '8px' }}>
+              <input
+                type="text"
+                value={editedName}
+                onChange={(e) => setEditedName(e.target.value)}
+                style={{
+                  flex: 1,
+                  padding: '12px',
+                  fontSize: '24px',
+                  fontWeight: 700,
+                  border: '2px solid var(--golden-main)',
+                  borderRadius: '4px',
+                  backgroundColor: 'var(--ivory-bg)'
+                }}
+                autoFocus
+                disabled={isSaving}
+              />
+              <Button 
+                variant="success" 
+                onClick={handleSaveName}
+                disabled={isSaving}
+                style={{ padding: '12px' }}
+              >
+                <Check size={20} />
+              </Button>
+              <Button 
+                variant="danger" 
+                onClick={handleCancelEdit}
+                disabled={isSaving}
+                style={{ padding: '12px' }}
+              >
+                <X size={20} />
+              </Button>
+            </div>
+            <p style={{ fontSize: '12px', color: 'var(--black-tertiary)' }}>
+              Tip: Renaming to match another item will merge their price histories
+            </p>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+            <h1 className="page-title" style={{ margin: 0, flex: 1 }}>{item.name}</h1>
+            {onItemRename && (
+              <Button 
+                variant="secondary" 
+                onClick={() => setIsEditingName(true)}
+                style={{ padding: '8px 16px' }}
+              >
+                <Edit2 size={16} />
+                Edit
+              </Button>
+            )}
+          </div>
+        )}
         <p className="page-subtitle">
           Price history across {item.priceHistory.length} purchase{item.priceHistory.length !== 1 ? 's' : ''}
         </p>

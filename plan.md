@@ -310,3 +310,99 @@ When editing, the user has two options:
 4. If the user chooses an existing name, the upload links to that item, and no new item is created.
 5. If the user chooses a new name, a new item is created and appears on the Items page.
 6. Existing price variation logic works as before but now uses the **final chosen item name**.
+
+
+
+# Feature Request: Multi-Receipt Upload Support
+
+## Overview
+
+Users should be able to upload **multiple receipts at once**.
+If the user selects more than one receipt during upload, the system should:
+
+1. Accept all selected files.
+2. Scan each receipt individually.
+3. Present each scanned receipt to the user one at a time for review and confirmation.
+4. Return the user to the normal upload/scan interface once all receipts have been reviewed and saved.
+
+This feature enhances convenience for users who often have several receipts to upload in one session.
+
+---
+
+## User Flow
+
+### 1. Upload Action
+
+* User taps **Upload Receipt**.
+* The device’s file picker or photo picker opens.
+* User can **multi-select multiple receipt images** (e.g., choosing 3 receipts instead of one).
+
+### 2. Handling Multiple Selected Files
+
+* If the user selects **one** receipt → current behavior (single scan flow).
+* If the user selects **multiple** receipts:
+
+  * Accept all selected files.
+  * Each receipt should be treated as a separate scanning task.
+  * Begin scanning them sequentially or in parallel (developer’s choice).
+
+---
+
+## 3. Post-Scan Review Interface
+
+After scanning each receipt, the app should display the parsed data for user confirmation.
+
+### Display Logic
+
+* Receipts should be presented **one at a time**, following the order the system processes them.
+* For each receipt, user sees:
+
+  * Extracted items
+  * Editable item names (per the previously defined naming feature)
+  * Prices, quantities, store, and date details
+  * Ability to save/confirm the receipt
+
+### User Actions per Receipt
+
+For each scanned receipt:
+
+* **Save / Confirm** → Moves to the next receipt in the queue
+* Optional: **Discard / Delete receipt** (if this action already exists or you want to support it)
+
+The user should not exit the flow until all selected receipts are handled.
+
+---
+
+## 4. Completion Behavior
+
+After the user has reviewed and saved all receipts:
+
+* The multi-receipt flow is considered complete.
+* The app returns the user to the **default upload/scan interface**, same as today after a single receipt upload.
+
+There should be **no additional steps** required from the user.
+
+---
+
+## Key Requirements Summary
+
+1. **Multi-select support** in the upload picker (images or PDFs).
+2. If more than one file is selected, system processes each as a separate receipt scan.
+3. Receipts appear **one-by-one** for user review.
+4. User must **save each receipt** before moving to the next.
+5. Once all receipts are reviewed and saved → return user to the main upload interface.
+6. All existing features (item rename/editing, price variation rules, etc.) should work identically within each receipt review screen.
+
+---
+
+## Acceptance Criteria
+
+1. User can select 1 or more receipt files when initiating an upload.
+2. When multiple receipts are selected:
+
+   * Each receipt is scanned individually.
+   * Each receipt has its own review screen.
+   * The user navigates receipt-by-receipt until done.
+3. Saving the last receipt returns the user to the standard upload interface.
+4. No loss of data occurs between receipts.
+5. Single-receipt behavior remains unchanged.

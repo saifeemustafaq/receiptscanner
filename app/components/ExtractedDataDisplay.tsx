@@ -140,24 +140,17 @@ export default function ExtractedDataDisplay({
             <span style={{ fontWeight: 600 }}>Receipt processed successfully!</span>
           </div>
 
-          {/* Scanned store name and date */}
-          {(data.storeNameScanned || data.receiptDate) && (
+          {/* Scanned store name */}
+          {data.storeNameScanned && (
             <div style={{
               padding: '12px',
               backgroundColor: 'var(--ivory-bg)',
               border: '1px solid var(--ivory-border)',
               borderRadius: '4px'
             }}>
-              {data.storeNameScanned && (
-                <p style={{ fontSize: '14px', color: 'var(--black-tertiary)', marginBottom: '4px' }}>
-                  <strong>Detected Store:</strong> {data.storeNameScanned}
-                </p>
-              )}
-              {data.receiptDate && (
-                <p style={{ fontSize: '14px', color: 'var(--black-tertiary)' }}>
-                  <strong>Receipt Date:</strong> {new Date(data.receiptDate).toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles' })}
-                </p>
-              )}
+              <p style={{ fontSize: '14px', color: 'var(--black-tertiary)' }}>
+                <strong>Detected Store:</strong> {data.storeNameScanned}
+              </p>
             </div>
           )}
 
