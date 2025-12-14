@@ -295,5 +295,1015 @@
       "total": 29.18
     },
     "timestamp": "2025-12-11T21:43:27.384Z"
+  },
+  {
+    "id": "1765519075657",
+    "storeNameScanned": "Apni Mandi",
+    "storeNameSelected": "Apni Mandi",
+    "billingDate": "2025-11-07",
+    "uploadDate": "2025-12-11",
+    "extractedData": {
+      "storeNameScanned": "Apni Mandi",
+      "receiptDate": "2025-11-07",
+      "items": [
+        {
+          "name": "ANAND RATLAMI SEV 340GM/120Z",
+          "quantity": 340,
+          "unitPrice": 0.0111,
+          "totalPrice": 3.79,
+          "unit": "g"
+        },
+        {
+          "name": "ADARSH BANANA CHIPS CHILLI 340GM",
+          "quantity": 340,
+          "unitPrice": 0.0088,
+          "totalPrice": 2.99,
+          "unit": "g"
+        },
+        {
+          "name": "ANAND BANANA CHIPS CHILLI 170GM",
+          "quantity": 170,
+          "unitPrice": 0.0223,
+          "totalPrice": 3.79,
+          "unit": "g"
+        },
+        {
+          "name": "Mushroom Box",
+          "quantity": 1,
+          "unitPrice": 1.99,
+          "totalPrice": 1.99,
+          "unit": null
+        },
+        {
+          "name": "Roma Tomato per lb",
+          "quantity": 1.24,
+          "unitPrice": 0.99,
+          "totalPrice": 1.23,
+          "unit": "lb"
+        },
+        {
+          "name": "Curry Leaves Pack Ea",
+          "quantity": 1,
+          "unitPrice": 1.29,
+          "totalPrice": 1.29,
+          "unit": "ea"
+        },
+        {
+          "name": "Cilantro ea",
+          "quantity": 1,
+          "unitPrice": 0.54,
+          "totalPrice": 0.54,
+          "unit": "ea"
+        },
+        {
+          "name": "Red Onion per 11",
+          "quantity": 1.31,
+          "unitPrice": 0.59,
+          "totalPrice": 0.77,
+          "unit": "lb"
+        },
+        {
+          "name": "Thai Chill) per Ib",
+          "quantity": 0.13,
+          "unitPrice": 2.29,
+          "totalPrice": 0.3,
+          "unit": "lb"
+        },
+        {
+          "name": "Phulka Fresh Uncooked Phulka 21 Oz",
+          "quantity": 1,
+          "unitPrice": 6.49,
+          "totalPrice": 6.49,
+          "unit": null
+        },
+        {
+          "name": "Phulka Fresh Uncooked Phulka 21 Oz",
+          "quantity": 1,
+          "unitPrice": 6.49,
+          "totalPrice": 6.49,
+          "unit": null
+        },
+        {
+          "name": "Shastia Dosa Batter 64oz",
+          "quantity": 64,
+          "unitPrice": 0.1717,
+          "totalPrice": 10.99,
+          "unit": "oz"
+        }
+      ],
+      "total": 40.66
+    },
+    "timestamp": "2025-12-12T05:57:55.657Z"
+  },
+  {
+    "id": "1765519083140",
+    "storeNameScanned": "Apni Mandi",
+    "storeNameSelected": "Apni Mandi",
+    "billingDate": "2025-01-15",
+    "uploadDate": "2025-12-11",
+    "extractedData": {
+      "storeNameScanned": "Apni Mandi",
+      "receiptDate": "2025-01-15",
+      "items": [
+        {
+          "name": "Deep Original Khakhara 200 G",
+          "quantity": 200,
+          "unitPrice": 0.0124,
+          "totalPrice": 2.49,
+          "unit": "g"
+        },
+        {
+          "name": "HALDIRAM'S BHINDI MASALA 283GM/100",
+          "quantity": 283,
+          "unitPrice": 0.0176,
+          "totalPrice": 4.99,
+          "unit": "g"
+        },
+        {
+          "name": "HALDIRAM?S PUNJABI SARSO DA SAAG 2",
+          "quantity": 1,
+          "unitPrice": 5.49,
+          "totalPrice": 5.49,
+          "unit": null
+        },
+        {
+          "name": "HALDIRAM?S PANEER TIKKA MASALA 283",
+          "quantity": 283,
+          "unitPrice": 0.0176,
+          "totalPrice": 4.99,
+          "unit": null
+        },
+        {
+          "name": "HALDIRAM?S SAMBAR 283GM/100Z",
+          "quantity": 283,
+          "unitPrice": 0.0123,
+          "totalPrice": 3.49,
+          "unit": "g"
+        },
+        {
+          "name": "HALDIRAM?S SAMBAR 283GM/1002",
+          "quantity": 283,
+          "unitPrice": 0.0123,
+          "totalPrice": 3.49,
+          "unit": "g"
+        },
+        {
+          "name": "HALDIRAM'S SCHEZWAN CHILLI PANEER",
+          "quantity": 1,
+          "unitPrice": 3.79,
+          "totalPrice": 3.79,
+          "unit": null
+        },
+        {
+          "name": "HALDIRAM'S PANEER TIKKA WRAP 156GM",
+          "quantity": 156,
+          "unitPrice": 0.0211,
+          "totalPrice": 3.29,
+          "unit": "g"
+        },
+        {
+          "name": "Haldiram dal khichdi 60g",
+          "quantity": 60,
+          "unitPrice": 0.0415,
+          "totalPrice": 2.49,
+          "unit": "g"
+        },
+        {
+          "name": "Phulka Fresh Uncooked Phulka 21 Oz",
+          "quantity": 21,
+          "unitPrice": 0.2852,
+          "totalPrice": 5.99,
+          "unit": "oz"
+        },
+        {
+          "name": "Phulka Fresh Uncooked Phulka 21 Oz",
+          "quantity": 21,
+          "unitPrice": 0.2852,
+          "totalPrice": 5.99,
+          "unit": "oz"
+        },
+        {
+          "name": "Spinach Small Bag",
+          "quantity": 1,
+          "unitPrice": 1.99,
+          "totalPrice": 1.99,
+          "unit": null
+        },
+        {
+          "name": "DEEP URAD WHOLE POLISHED MATPE BEA",
+          "quantity": 1,
+          "unitPrice": 5.49,
+          "totalPrice": 5.49,
+          "unit": null
+        },
+        {
+          "name": "Shastha Dosa Batter 64oz",
+          "quantity": 64,
+          "unitPrice": 0.1561,
+          "totalPrice": 9.99,
+          "unit": "oz"
+        },
+        {
+          "name": "FANTA ORANGE FLAVOURED 300ML/10.14",
+          "quantity": 300,
+          "unitPrice": 0.006,
+          "totalPrice": 1.79,
+          "unit": "ml"
+        },
+        {
+          "name": "CA CRV",
+          "quantity": 1,
+          "unitPrice": 0.05,
+          "totalPrice": 0.05,
+          "unit": null
+        },
+        {
+          "name": "Hide and seek(121g)",
+          "quantity": 121,
+          "unitPrice": 0.0148,
+          "totalPrice": 1.79,
+          "unit": "g"
+        },
+        {
+          "name": "Hide and seek(121g)",
+          "quantity": 121,
+          "unitPrice": 0.0148,
+          "totalPrice": 1.79,
+          "unit": "g"
+        },
+        {
+          "name": "SHAN GINGER GARLIC PASTE 700GM/24.",
+          "quantity": 700,
+          "unitPrice": 0.0086,
+          "totalPrice": 5.99,
+          "unit": "g"
+        },
+        {
+          "name": "Jumbo Tomato Per 1b",
+          "quantity": 3.54,
+          "unitPrice": 1.29,
+          "totalPrice": 4.57,
+          "unit": "lb"
+        },
+        {
+          "name": "Red Onion per lb",
+          "quantity": 2.9,
+          "unitPrice": 0.99,
+          "totalPrice": 2.87,
+          "unit": "lb"
+        },
+        {
+          "name": "Mushroom Box",
+          "quantity": 1,
+          "unitPrice": 2.29,
+          "totalPrice": 2.29,
+          "unit": null
+        },
+        {
+          "name": "PINTS OF JOY RASMALAI 473ML",
+          "quantity": 473,
+          "unitPrice": 0.0232,
+          "totalPrice": 10.99,
+          "unit": "ml"
+        }
+      ],
+      "total": 96.25
+    },
+    "timestamp": "2025-12-12T05:58:03.140Z"
+  },
+  {
+    "id": "1765519089971",
+    "storeNameScanned": "Unknown",
+    "storeNameSelected": "Apni Mandi",
+    "billingDate": "2024-11-30",
+    "uploadDate": "2025-12-11",
+    "extractedData": {
+      "storeNameScanned": null,
+      "receiptDate": "2024-11-30",
+      "items": [
+        {
+          "name": "RITANIA SUJI RUSK 610GM",
+          "quantity": 610,
+          "unitPrice": 0.0082,
+          "totalPrice": 4.99,
+          "unit": "g"
+        },
+        {
+          "name": "wen fresh cookies coconut",
+          "quantity": 1,
+          "unitPrice": 3.99,
+          "totalPrice": 3.99,
+          "unit": null
+        },
+        {
+          "name": "Shastha Dosa Batter 64oz",
+          "quantity": 64,
+          "unitPrice": 0.1561,
+          "totalPrice": 9.99,
+          "unit": "oz"
+        },
+        {
+          "name": "Sakthi Chilli Chicken Masala 200g/",
+          "quantity": 200,
+          "unitPrice": 0.015,
+          "totalPrice": 2.99,
+          "unit": "g"
+        },
+        {
+          "name": "HALDIRAM?S PANEER TIKKA MASALA 283",
+          "quantity": 283,
+          "unitPrice": 0.0176,
+          "totalPrice": 4.99,
+          "unit": null
+        },
+        {
+          "name": "Buldak Carbonara Chicken Ramen Cup",
+          "quantity": 1,
+          "unitPrice": 1.99,
+          "totalPrice": 1.99,
+          "unit": null
+        },
+        {
+          "name": "ROTI FRESH UNCOOKED 652GM/23OZ/12C",
+          "quantity": 652,
+          "unitPrice": 0.0092,
+          "totalPrice": 5.99,
+          "unit": "g"
+        },
+        {
+          "name": "Parle Rusk Family Pack 1.092Kg",
+          "quantity": 1.092,
+          "unitPrice": 4.57,
+          "totalPrice": 4.99,
+          "unit": "kg"
+        },
+        {
+          "name": "Desi Fulka 1.1Lb",
+          "quantity": 1.1,
+          "unitPrice": 4.54,
+          "totalPrice": 4.99,
+          "unit": "lb"
+        },
+        {
+          "name": "ROTI FRESH UNCOOKED 652GM/23OZ/120",
+          "quantity": 652,
+          "unitPrice": 0.0092,
+          "totalPrice": 5.99,
+          "unit": "g"
+        },
+        {
+          "name": "HALDIRAM'S DAL MAKHANI 283GM/100Z",
+          "quantity": 283,
+          "unitPrice": 0.0152,
+          "totalPrice": 4.29,
+          "unit": "g"
+        },
+        {
+          "name": "HALDIRAM'S BHINDI MASALA 283GM/100",
+          "quantity": 283,
+          "unitPrice": 0.0176,
+          "totalPrice": 4.99,
+          "unit": "g"
+        },
+        {
+          "name": "HR CHOLEY KULCHA 320GM",
+          "quantity": 320,
+          "unitPrice": 0.0134,
+          "totalPrice": 4.29,
+          "unit": "g"
+        },
+        {
+          "name": "sesame brittle",
+          "quantity": 1,
+          "unitPrice": 2.99,
+          "totalPrice": 2.99,
+          "unit": null
+        },
+        {
+          "name": "BRITANNIA NICE TIME BISCUIT150GM",
+          "quantity": 150,
+          "unitPrice": 0.0119,
+          "totalPrice": 1.79,
+          "unit": "g"
+        },
+        {
+          "name": "Tandoori Chicken Marinade",
+          "quantity": 1,
+          "unitPrice": 4.49,
+          "totalPrice": 4.49,
+          "unit": null
+        },
+        {
+          "name": "HALDIRAM'S KADHAI PANEER 283GM/100",
+          "quantity": 283,
+          "unitPrice": 0.0176,
+          "totalPrice": 4.99,
+          "unit": "g"
+        },
+        {
+          "name": "Whole WheatBread 1lb",
+          "quantity": 1,
+          "unitPrice": 2.99,
+          "totalPrice": 2.99,
+          "unit": null
+        },
+        {
+          "name": "Red Onion per lb",
+          "quantity": 0.67,
+          "unitPrice": 0.79,
+          "totalPrice": 0.53,
+          "unit": "lb"
+        },
+        {
+          "name": "Roma Tomato per lb",
+          "quantity": 0.5,
+          "unitPrice": 1.79,
+          "totalPrice": 0.9,
+          "unit": "lb"
+        }
+      ],
+      "total": 83.15
+    },
+    "timestamp": "2025-12-12T05:58:09.971Z"
+  },
+  {
+    "id": "1765519096049",
+    "storeNameScanned": "Apni Mandi Farmers Market",
+    "storeNameSelected": "Apni Mandi",
+    "billingDate": "2025-08-03",
+    "uploadDate": "2025-12-11",
+    "extractedData": {
+      "storeNameScanned": "Apni Mandi Farmers Market",
+      "receiptDate": "2025-08-03",
+      "items": [
+        {
+          "name": "Thai Chilli per lb",
+          "quantity": 0.1,
+          "unitPrice": 1.89,
+          "totalPrice": 0.19,
+          "unit": "lb"
+        },
+        {
+          "name": "Cilantro ea",
+          "quantity": 1,
+          "unitPrice": 0.89,
+          "totalPrice": 0.89,
+          "unit": "ea"
+        },
+        {
+          "name": "Yellow Bell Pepper per 1b",
+          "quantity": 0.41,
+          "unitPrice": 2.99,
+          "totalPrice": 1.23,
+          "unit": "lb"
+        },
+        {
+          "name": "Whole WheatBread 11b",
+          "quantity": 1,
+          "unitPrice": 2.99,
+          "totalPrice": 2.99,
+          "unit": null
+        },
+        {
+          "name": "Green Bell Pepper Per Lb",
+          "quantity": 1.13,
+          "unitPrice": 1.49,
+          "totalPrice": 1.68,
+          "unit": "lb"
+        },
+        {
+          "name": "Roma Tomato per lb",
+          "quantity": 1.35,
+          "unitPrice": 0.99,
+          "totalPrice": 1.34,
+          "unit": "lb"
+        },
+        {
+          "name": "Fresh Puran Poli",
+          "quantity": 1,
+          "unitPrice": 5.99,
+          "totalPrice": 5.99,
+          "unit": null
+        },
+        {
+          "name": "Deep Puran-Poli 4 Pc 468 G",
+          "quantity": 468,
+          "unitPrice": 0.0064,
+          "totalPrice": 2.99,
+          "unit": "g"
+        },
+        {
+          "name": "Bedekar Chicken Masala Nt.wt.75g",
+          "quantity": 75,
+          "unitPrice": 0.0265,
+          "totalPrice": 1.99,
+          "unit": "g"
+        },
+        {
+          "name": "Britannia 50 -50 Sweet&Salty",
+          "quantity": 1,
+          "unitPrice": 4.49,
+          "totalPrice": 4.49,
+          "unit": null
+        },
+        {
+          "name": "Red Bull 355M1",
+          "quantity": 355,
+          "unitPrice": 0.0107,
+          "totalPrice": 3.79,
+          "unit": "ml"
+        },
+        {
+          "name": "CA CRV",
+          "quantity": 1,
+          "unitPrice": 0.05,
+          "totalPrice": 0.05,
+          "unit": null
+        },
+        {
+          "name": "Shastha Dosa Batter 64oz",
+          "quantity": 64,
+          "unitPrice": 0.1717,
+          "totalPrice": 10.99,
+          "unit": "oz"
+        },
+        {
+          "name": "Shan Ginger Garlic Paste 310 g",
+          "quantity": 310,
+          "unitPrice": 0.0129,
+          "totalPrice": 3.99,
+          "unit": "g"
+        },
+        {
+          "name": "THUMSUP 300ML/10.14 F. OZ",
+          "quantity": 300,
+          "unitPrice": 0.0043,
+          "totalPrice": 1.29,
+          "unit": "ml"
+        },
+        {
+          "name": "CA CRV",
+          "quantity": 1,
+          "unitPrice": 0.05,
+          "totalPrice": 0.05,
+          "unit": null
+        },
+        {
+          "name": "THUMSUP 300ML/10.14 FL OZ",
+          "quantity": 300,
+          "unitPrice": 0.0043,
+          "totalPrice": 1.29,
+          "unit": "ml"
+        },
+        {
+          "name": "CA CRV",
+          "quantity": 1,
+          "unitPrice": 0.05,
+          "totalPrice": 0.05,
+          "unit": null
+        },
+        {
+          "name": "Clover 2% Milk 1.89L",
+          "quantity": 1.89,
+          "unitPrice": 2.11,
+          "totalPrice": 3.99,
+          "unit": "l"
+        },
+        {
+          "name": "Simply Orange Juice 340ml",
+          "quantity": 340,
+          "unitPrice": 0.0103,
+          "totalPrice": 3.49,
+          "unit": "ml"
+        },
+        {
+          "name": "Bourbon original",
+          "quantity": 1,
+          "unitPrice": 0.99,
+          "totalPrice": 0.99,
+          "unit": null
+        },
+        {
+          "name": "Cadbury Dairy Milk 110G",
+          "quantity": 110,
+          "unitPrice": 0.0317,
+          "totalPrice": 3.49,
+          "unit": "g"
+        }
+      ],
+      "total": 57.48
+    },
+    "timestamp": "2025-12-12T05:58:16.049Z"
+  },
+  {
+    "id": "1765519101686",
+    "storeNameScanned": "Apni Mandi",
+    "storeNameSelected": "Apni Mandi",
+    "billingDate": "2025-08-12",
+    "uploadDate": "2025-12-11",
+    "extractedData": {
+      "storeNameScanned": "Apni Mandi",
+      "receiptDate": "2025-08-12",
+      "items": [
+        {
+          "name": "DEEP INDIAN KITCHEN COCONUT CHICKE",
+          "quantity": 1,
+          "unitPrice": 5.49,
+          "totalPrice": 5.49,
+          "unit": null
+        },
+        {
+          "name": "Phulka Fresh UncounEu hulka 21 Oz",
+          "quantity": 21,
+          "unitPrice": 0.2852,
+          "totalPrice": 5.99,
+          "unit": "oz"
+        },
+        {
+          "name": "Thai Chilli per lb",
+          "quantity": 0.15,
+          "unitPrice": 2.09,
+          "totalPrice": 0.31,
+          "unit": "lb"
+        },
+        {
+          "name": "Mint Ea",
+          "quantity": 1,
+          "unitPrice": 0.59,
+          "totalPrice": 0.59,
+          "unit": null
+        },
+        {
+          "name": "Mushroom Box",
+          "quantity": 1,
+          "unitPrice": 2.79,
+          "totalPrice": 2.79,
+          "unit": null
+        },
+        {
+          "name": "Red Onion per lb",
+          "quantity": 3.02,
+          "unitPrice": 0.99,
+          "totalPrice": 2.99,
+          "unit": "lb"
+        },
+        {
+          "name": "Shastha Dosa Batter 64oz",
+          "quantity": 64,
+          "unitPrice": 0.1873,
+          "totalPrice": 11.99,
+          "unit": "oz"
+        },
+        {
+          "name": "Clover 2% Milk 1.89L",
+          "quantity": 1.89,
+          "unitPrice": 2.11,
+          "totalPrice": 3.99,
+          "unit": "l"
+        },
+        {
+          "name": "Bag",
+          "quantity": 1,
+          "unitPrice": 0.1,
+          "totalPrice": 0.1,
+          "unit": null
+        }
+      ],
+      "total": 34.24
+    },
+    "timestamp": "2025-12-12T05:58:21.686Z"
+  },
+  {
+    "id": "1765519157113",
+    "storeNameScanned": "Apni Mandi Farmers Market",
+    "storeNameSelected": "Apni Mandi",
+    "billingDate": "2025-09-13",
+    "uploadDate": "2025-12-11",
+    "extractedData": {
+      "storeNameScanned": "Apni Mandi Farmers Market",
+      "receiptDate": "2025-09-13",
+      "items": [
+        {
+          "name": "DESI LOW FAT YOUGURT 2LB",
+          "quantity": 1,
+          "unitPrice": 4.99,
+          "totalPrice": 4.99,
+          "unit": null
+        },
+        {
+          "name": "Red Onion per lb",
+          "quantity": 3.23,
+          "unitPrice": 0.59,
+          "totalPrice": 1.91,
+          "unit": "lb"
+        },
+        {
+          "name": "Rosemary Farm Large Eggs 20",
+          "quantity": 1,
+          "unitPrice": 10.99,
+          "totalPrice": 10.99,
+          "unit": null
+        },
+        {
+          "name": "OROWEAT BUTTERMILK BREAD 680GM",
+          "quantity": 680,
+          "unitPrice": 0.0103,
+          "totalPrice": 6.99,
+          "unit": "gm"
+        },
+        {
+          "name": "Shastha Dosa Batter 64oz",
+          "quantity": 64,
+          "unitPrice": 0.1873,
+          "totalPrice": 11.99,
+          "unit": "oz"
+        },
+        {
+          "name": "LAYS INDIA'S MAGIC MASALA 52GM",
+          "quantity": 52,
+          "unitPrice": 0.0248,
+          "totalPrice": 1.29,
+          "unit": "gm"
+        },
+        {
+          "name": "Baby Carrot Pack Ea",
+          "quantity": 1,
+          "unitPrice": 1.99,
+          "totalPrice": 1.99,
+          "unit": null
+        }
+      ],
+      "total": 40.15
+    },
+    "timestamp": "2025-12-12T05:59:17.113Z"
+  },
+  {
+    "id": "1765519163501",
+    "storeNameScanned": "Apni Mandi Farmers Market",
+    "storeNameSelected": "Apni Mandi",
+    "billingDate": "2025-11-12",
+    "uploadDate": "2025-12-11",
+    "extractedData": {
+      "storeNameScanned": "Apni Mandi Farmers Market",
+      "receiptDate": "2025-11-12",
+      "items": [
+        {
+          "name": "Phulka Fresh Uncooked Phulka 21 Oz",
+          "quantity": 21,
+          "unitPrice": 0.309,
+          "totalPrice": 6.49,
+          "unit": "oz"
+        },
+        {
+          "name": "Shastha Dosa Batter 64oz",
+          "quantity": 64,
+          "unitPrice": 0.1717,
+          "totalPrice": 10.99,
+          "unit": "oz"
+        },
+        {
+          "name": "Clover 2% Milk 1.89L",
+          "quantity": 1.89,
+          "unitPrice": 2.11,
+          "totalPrice": 3.99,
+          "unit": "L"
+        }
+      ],
+      "total": 21.47
+    },
+    "timestamp": "2025-12-12T05:59:23.501Z"
+  },
+  {
+    "id": "1765519169247",
+    "storeNameScanned": "Apni Mandi",
+    "storeNameSelected": "Apni Mandi",
+    "billingDate": "2025-01-20",
+    "uploadDate": "2025-12-11",
+    "extractedData": {
+      "storeNameScanned": "Apni Mandi",
+      "receiptDate": "2025-01-20",
+      "items": [
+        {
+          "name": "Cilantro ea",
+          "quantity": 1,
+          "unitPrice": 0.33,
+          "totalPrice": 0.33,
+          "unit": "ea"
+        },
+        {
+          "name": "Shastha Dosa Batter 64oz",
+          "quantity": 64,
+          "unitPrice": 0.1561,
+          "totalPrice": 9.99,
+          "unit": "oz"
+        },
+        {
+          "name": "HALDIRAM?S MARWARI BHUJIA 350GM/12",
+          "quantity": 350,
+          "unitPrice": 0.00997,
+          "totalPrice": 3.49,
+          "unit": "gm"
+        },
+        {
+          "name": "Clover 2% Milk 1.89L",
+          "quantity": 1.89,
+          "unitPrice": 2.11,
+          "totalPrice": 3.99,
+          "unit": "L"
+        },
+        {
+          "name": "Curry Leaves Pack Ea",
+          "quantity": 1,
+          "unitPrice": 1.29,
+          "totalPrice": 1.29,
+          "unit": "ea"
+        },
+        {
+          "name": "Britannia suji rusk 1.22kg",
+          "quantity": 1.22,
+          "unitPrice": 5.73,
+          "totalPrice": 6.99,
+          "unit": "kg"
+        },
+        {
+          "name": "Phulka Fresh Uncooked Phulka 21 Oz",
+          "quantity": 21,
+          "unitPrice": 0.2852,
+          "totalPrice": 5.99,
+          "unit": "oz"
+        },
+        {
+          "name": "DEEP HM STYLE PARATHA 5PS 11.750Z/",
+          "quantity": 11.75,
+          "unitPrice": 0.3,
+          "totalPrice": 3.49,
+          "unit": "oz"
+        },
+        {
+          "name": "Phulka Fresh Uncooked Phulka 21 02",
+          "quantity": 21,
+          "unitPrice": 0.2852,
+          "totalPrice": 5.99,
+          "unit": "oz"
+        },
+        {
+          "name": "Apple Fuji Per Lb",
+          "quantity": 0.74,
+          "unitPrice": 0.99,
+          "totalPrice": 0.73,
+          "unit": "lb"
+        },
+        {
+          "name": "Thai Chilli per lb",
+          "quantity": 0.15,
+          "unitPrice": 4.09,
+          "totalPrice": 0.61,
+          "unit": "lb"
+        },
+        {
+          "name": "DEEP LACHCHA PARTHA 340GM",
+          "quantity": 340,
+          "unitPrice": 0.0097,
+          "totalPrice": 3.29,
+          "unit": "gm"
+        },
+        {
+          "name": "DEEP TANDOORI SROTI 10.250Z/290GM",
+          "quantity": 290,
+          "unitPrice": 0.0138,
+          "totalPrice": 3.99,
+          "unit": "gm"
+        },
+        {
+          "name": "DEEP MADRAS TOMATO CHUTNEY 283 G",
+          "quantity": 283,
+          "unitPrice": 0.0123,
+          "totalPrice": 3.49,
+          "unit": "g"
+        },
+        {
+          "name": "HALDIRAM'S KADHAI PANEER 283GM/100",
+          "quantity": 283,
+          "unitPrice": 0.0176,
+          "totalPrice": 4.99,
+          "unit": "gm"
+        },
+        {
+          "name": "HALDIRAM?S PUNJABI SARSO DA SAAG 2",
+          "quantity": 1,
+          "unitPrice": 5.49,
+          "totalPrice": 5.49,
+          "unit": null
+        },
+        {
+          "name": "HALDIRAM'S BHINDI MASALA 283GM/100",
+          "quantity": 283,
+          "unitPrice": 0.0176,
+          "totalPrice": 4.99,
+          "unit": "gm"
+        },
+        {
+          "name": "Jumbo Tomato Per 1b",
+          "quantity": 1.33,
+          "unitPrice": 0.99,
+          "totalPrice": 1.32,
+          "unit": "lb"
+        },
+        {
+          "name": "HALDIRAM PANEER ONION PARATHA 1.6",
+          "quantity": 1.6,
+          "unitPrice": 8.74,
+          "totalPrice": 13.99,
+          "unit": null
+        }
+      ],
+      "total": 84.44
+    },
+    "timestamp": "2025-12-12T05:59:29.247Z"
+  },
+  {
+    "id": "1765519181272",
+    "storeNameScanned": "Apni Mandi",
+    "storeNameSelected": "Apni Mandi",
+    "billingDate": "2025-01-05",
+    "uploadDate": "2025-12-11",
+    "extractedData": {
+      "storeNameScanned": "Apni Mandi",
+      "receiptDate": "2025-01-05",
+      "items": [
+        {
+          "name": "Nulaid Cage Free Eggs 12 ct",
+          "quantity": 12,
+          "unitPrice": 0.83,
+          "totalPrice": 9.99,
+          "unit": "ct"
+        },
+        {
+          "name": "Russet Potato per/lb",
+          "quantity": 1.07,
+          "unitPrice": 0.69,
+          "totalPrice": 0.74,
+          "unit": "lb"
+        },
+        {
+          "name": "Red Onion per lb",
+          "quantity": 1.49,
+          "unitPrice": 0.99,
+          "totalPrice": 1.48,
+          "unit": "lb"
+        },
+        {
+          "name": "Methi Bunch ea",
+          "quantity": 1,
+          "unitPrice": 1.09,
+          "totalPrice": 1.09,
+          "unit": "ea"
+        },
+        {
+          "name": "Roma Tomato per 1b",
+          "quantity": 0.82,
+          "unitPrice": 1.79,
+          "totalPrice": 1.47,
+          "unit": "lb"
+        },
+        {
+          "name": "Mushroom Box",
+          "quantity": 1,
+          "unitPrice": 2.29,
+          "totalPrice": 2.29,
+          "unit": null
+        },
+        {
+          "name": "Shastha Dosa Batter 64oz",
+          "quantity": 64,
+          "unitPrice": 0.1561,
+          "totalPrice": 9.99,
+          "unit": "oz"
+        },
+        {
+          "name": "Thai Chilli per Ib",
+          "quantity": 0.15,
+          "unitPrice": 1.99,
+          "totalPrice": 0.3,
+          "unit": "lb"
+        },
+        {
+          "name": "HALDIRAM?S SAMBAR 283GM/100Z",
+          "quantity": 1,
+          "unitPrice": 3.49,
+          "totalPrice": 3.49,
+          "unit": null
+        },
+        {
+          "name": "HALDIRAM?S SAMBAR 283GM/100Z",
+          "quantity": 1,
+          "unitPrice": 3.49,
+          "totalPrice": 3.49,
+          "unit": null
+        }
+      ],
+      "total": 34.33
+    },
+    "timestamp": "2025-12-12T05:59:41.272Z"
   }
 ]
