@@ -11,6 +11,7 @@ import Card from './components/Card';
 import { getAllItemNames } from '@/lib/itemsProcessor';
 import { useReceipts } from '@/lib/hooks/useReceipts';
 import { useStores } from '@/lib/hooks/useStores';
+import { useUnits } from '@/lib/hooks/useUnits';
 import { SavedReceipt, QueueItem } from '@/lib/types';
 
 export default function Home() {
@@ -31,6 +32,7 @@ export default function Home() {
   // Use custom hooks
   const { receipts, loadReceipts } = useReceipts();
   const { stores, addStore: handleAddStore } = useStores();
+  const { units } = useUnits();
 
   // Update existing item names when receipts change
   useEffect(() => {
@@ -367,6 +369,7 @@ export default function Home() {
                 isProcessing={isProcessing}
                 error={error}
                 existingItemNames={existingItemNames}
+                units={units}
                 onItemChange={handleItemChange}
               />
             </div>

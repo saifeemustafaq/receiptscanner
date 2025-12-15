@@ -20,12 +20,13 @@ interface SavedReceipt {
 interface ReceiptHistoryProps {
   receipts: SavedReceipt[];
   stores: string[];
+  units: string[];
   onDelete: (id: string) => void;
   onUpdate: (id: string, updates: any) => void;
   onExport: () => void;
 }
 
-export default function ReceiptHistory({ receipts, stores, onDelete, onUpdate, onExport }: ReceiptHistoryProps) {
+export default function ReceiptHistory({ receipts, stores, units, onDelete, onUpdate, onExport }: ReceiptHistoryProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editedStoreName, setEditedStoreName] = useState('');
@@ -96,7 +97,16 @@ export default function ReceiptHistory({ receipts, stores, onDelete, onUpdate, o
     
     const { receiptId, itemIndex, field } = editingField;
     const updatedItems = [...editedItems];
-    updatedItems[itemIndex] = { ...updatedItems[itemIndex], [field]: tempValue };
+    
+    // Handle unit field - allow empty string to set to null
+    if (field === 'unit') {
+      updatedItems[itemIndex] = { 
+        ...updatedItems[itemIndex], 
+        unit: tempValue === '' || tempValue === null ? null : tempValue 
+      };
+    } else {
+      updatedItems[itemIndex] = { ...updatedItems[itemIndex], [field]: tempValue };
+    }
     
     // Auto-calculate totalPrice if quantity or unitPrice changes
     const item = updatedItems[itemIndex];
@@ -340,7 +350,55 @@ export default function ReceiptHistory({ receipts, stores, onDelete, onUpdate, o
                                         textAlign: 'right',
                                       }}
                                     />
-                                    <span style={{ minWidth: '30px', fontSize: '12px' }}>{item.unit || ''}</span>
+                                    <span 
+                                      onClick={() => {
+                                        const currentItem = editedItems[idx];
+                                        startEditingField(receipt.id, idx, 'unit', currentItem.unit || '');
+                                      }}
+                                      style={{ 
+                                        minWidth: '30px', 
+                                        fontSize: '12px',
+                                        cursor: 'pointer',
+                                        padding: '2px 4px',
+                                        borderRadius: '4px'
+                                      }}
+                                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--ivory-darker)'}
+                                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                      title="Click to edit unit"
+                                    >
+                                      {item.unit || ''}
+                                    </span>
+                                    <button onClick={saveFieldEdit} style={{ padding: '4px', cursor: 'pointer', background: 'none', border: 'none' }}>
+                                      <Check size={16} color="var(--green-main)" />
+                                    </button>
+                                    <button onClick={cancelEditingField} style={{ padding: '4px', cursor: 'pointer', background: 'none', border: 'none' }}>
+                                      <X size={16} color="var(--error-text)" />
+                                    </button>
+                                  </div>
+                                ) : editingField?.receiptId === receipt.id && editingField?.itemIndex === idx && editingField?.field === 'unit' ? (
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end' }}>
+                                    <span style={{ fontSize: '14px' }}>{item.quantity || '-'}</span>
+                                    <select
+                                      value={tempValue || ''}
+                                      onChange={(e) => setTempValue(e.target.value)}
+                                      onKeyDown={handleFieldKeyDown}
+                                      autoFocus
+                                      style={{
+                                        width: '80px',
+                                        padding: '6px 8px',
+                                        fontSize: '14px',
+                                        border: '2px solid var(--golden-main)',
+                                        borderRadius: '4px',
+                                        cursor: 'pointer',
+                                      }}
+                                    >
+                                      <option value="">(no unit)</option>
+                                      {units.map(unit => (
+                                        <option key={unit} value={unit}>
+                                          {unit}
+                                        </option>
+                                      ))}
+                                    </select>
                                     <button onClick={saveFieldEdit} style={{ padding: '4px', cursor: 'pointer', background: 'none', border: 'none' }}>
                                       <Check size={16} color="var(--green-main)" />
                                     </button>
@@ -349,14 +407,31 @@ export default function ReceiptHistory({ receipts, stores, onDelete, onUpdate, o
                                     </button>
                                   </div>
                                 ) : (
-                                  <span
-                                    onClick={() => startEditingField(receipt.id, idx, 'quantity', item.quantity)}
-                                    style={{ cursor: 'pointer', padding: '4px 8px', borderRadius: '4px' }}
-                                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--ivory-darker)'}
-                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                                  >
-                                    {item.quantity || '-'} {item.unit || ''}
-                                  </span>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end' }}>
+                                    <span
+                                      onClick={() => startEditingField(receipt.id, idx, 'quantity', item.quantity)}
+                                      style={{ cursor: 'pointer', padding: '4px 8px', borderRadius: '4px' }}
+                                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--ivory-darker)'}
+                                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                    >
+                                      {item.quantity || '-'}
+                                    </span>
+                                    <span
+                                      onClick={() => startEditingField(receipt.id, idx, 'unit', item.unit || '')}
+                                      style={{ 
+                                        cursor: 'pointer', 
+                                        padding: '4px 8px', 
+                                        borderRadius: '4px',
+                                        fontSize: '12px',
+                                        color: item.unit ? 'var(--black-text)' : 'var(--black-tertiary)'
+                                      }}
+                                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--ivory-darker)'}
+                                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                      title="Click to edit unit"
+                                    >
+                                      {item.unit || '(no unit)'}
+                                    </span>
+                                  </div>
                                 )}
                               </td>
                               <td style={{ padding: '12px', textAlign: 'right' }}>
