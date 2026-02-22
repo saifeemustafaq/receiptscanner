@@ -1,20 +1,20 @@
-# Receipt Scanner – Product Requirements Document (PRD)
+# Receipt Scanner - Product Requirements Document (PRD)
 
 ## 1. Purpose and problem
 
-Receipt Scanner was built to support **community kitchens and similar organizations** that run on tight budgets and rely on volunteers for grocery management. In that context, it is the volunteers’ responsibility to compare prices across stores and buy each item where it is cheapest—for example, onions might be cheaper at Walmart while tomatoes are cheaper at Costco. Making those choices saves money and stretches limited funds.
+Receipt Scanner was built to support **community kitchens and similar organizations** that run on tight budgets and rely on volunteers for grocery management. In that context, it is the volunteers’ responsibility to compare prices across stores and buy each item where it is cheapest, for example, onions might be cheaper at Walmart while tomatoes are cheaper at Costco. Making those choices saves money and stretches limited funds.
 
 The problem this app solves:
 
 - **No historical memory:** Volunteers often did not know where a given item had been cheapest in the past, or forgot after a few weeks.
 - **No single place to document and compare:** Without a shared record of receipts and prices, it was hard to see which store had the best price for a specific item over time.
-- **Manual comparison is error-prone:** Relying on memory or ad‑hoc notes made it difficult to consistently buy from the right store for each item.
+- **Manual comparison is error-prone:** Relying on memory or ad-hoc notes made it difficult to consistently buy from the right store for each item.
 
 Receipt Scanner addresses this by providing an interface that:
 
 - Captures receipts (scan or upload) and extracts line items and prices automatically.
 - Stores receipt history so every purchase is recorded by store and date.
-- Builds an item-level view and **Insights** so volunteers can see, per item, where it was cheapest, most expensive, and how prices trend over time—making it easier to decide where to shop for each item on the next run.
+- Builds an item-level view and **Insights** so volunteers can see, per item, where it was cheapest, most expensive, and how prices trend over time, making it easier to decide where to shop for each item on the next run.
 
 ---
 
@@ -28,7 +28,7 @@ Receipt Scanner addresses this by providing an interface that:
 
 ## 3. User-facing features (by area)
 
-### 3.1 Receipt capture and AI extraction (Home – `/`)
+### 3.1 Receipt capture and AI extraction (Home - `/`)
 
 - **Capture methods**
   - **Camera:** Use device camera to capture a receipt (via file input `accept="image/*"`).
