@@ -4,18 +4,40 @@ import React, { useState } from 'react';
 import { ArrowLeft, Calendar, Store, DollarSign, TrendingUp, TrendingDown, Minus, Edit2, Check, X } from 'lucide-react';
 import Card from './Card';
 import Button from './Button';
+import BottomSheet from './BottomSheet';
+import ReceiptDetailView from './ReceiptDetailView';
 import { ProcessedItem } from '@/lib/itemsProcessor';
+import { SavedReceipt } from '@/lib/types';
 
 interface ItemDetailProps {
   item: ProcessedItem;
+  receipts: SavedReceipt[];
+  stores: string[];
+  units: string[];
   onBack: () => void;
   onItemRename?: (oldName: string, newName: string) => Promise<void>;
+  onReceiptUpdate?: (id: string, updates: any) => Promise<void>;
+  onReceiptDelete?: (id: string) => Promise<void>;
+  onReceiptsReload?: () => Promise<void>;
+  receiptsLoading?: boolean;
 }
 
-export default function ItemDetail({ item, onBack, onItemRename }: ItemDetailProps) {
+export default function ItemDetail({ 
+  item, 
+  receipts, 
+  stores, 
+  units, 
+  onBack, 
+  onItemRename,
+  onReceiptUpdate,
+  onReceiptDelete,
+  onReceiptsReload,
+  receiptsLoading = false
+}: ItemDetailProps) {
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState(item.name);
   const [isSaving, setIsSaving] = useState(false);
+  const [selectedReceiptId, setSelectedReceiptId] = useState<string | null>(null);
   const formatPrice = (price: number, unit: string | null) => {
     const priceStr = `$${price.toFixed(2)}`;
     return unit ? `${priceStr}/${unit}` : priceStr;
@@ -283,7 +305,17 @@ export default function ItemDetail({ item, onBack, onItemRename }: ItemDetailPro
                         </div>
                         <div className="flex items-center gap-xs">
                           <Calendar size={16} style={{ color: 'var(--black-tertiary)' }} />
-                          <span style={{ color: 'var(--black-secondary)' }}>
+                          <span 
+                            onClick={() => setSelectedReceiptId(entry.receiptId)}
+                            style={{ 
+                              color: 'var(--black-secondary)',
+                              cursor: 'pointer',
+                              textDecoration: 'underline',
+                              textDecorationColor: 'var(--golden-main)',
+                              textUnderlineOffset: '2px'
+                            }}
+                            title="Click to view full receipt"
+                          >
                             {new Date(entry.date + 'T00:00:00').toLocaleDateString('en-US', {
                               timeZone: 'America/Los_Angeles',
                               month: 'short',
@@ -335,6 +367,63 @@ export default function ItemDetail({ item, onBack, onItemRename }: ItemDetailPro
           </Card>
         </div>
       </div>
+
+      {/* Receipt Bottom Sheet */}
+      {selectedReceiptId && (() => {
+        const receipt = receipts.find(r => r.id === selectedReceiptId);
+        // Keep the sheet open even if receipt is temporarily not found during reload
+        if (!receipt && !receiptsLoading) {
+          // Only close if we're not loading and receipt is truly not found
+          return null;
+        }
+        
+        // If loading and receipt not found yet, show loading state
+        if (!receipt && receiptsLoading) {
+          return (
+            <BottomSheet
+              isOpen={!!selectedReceiptId}
+              onClose={() => setSelectedReceiptId(null)}
+              title="Loading..."
+            >
+              <div style={{ padding: '24px', textAlign: 'center' }}>
+                <p style={{ color: 'var(--black-secondary)' }}>Updating receipt...</p>
+              </div>
+            </BottomSheet>
+          );
+        }
+        
+        if (!receipt) return null;
+        
+        return (
+          <BottomSheet
+            isOpen={!!selectedReceiptId}
+            onClose={() => setSelectedReceiptId(null)}
+            title={`Receipt from ${receipt.storeNameSelected}`}
+          >
+            <ReceiptDetailView
+              receipt={receipt}
+              stores={stores}
+              units={units}
+              onUpdate={async (id, updates) => {
+                if (onReceiptUpdate) {
+                  // updateReceipt already calls loadReceipts() internally
+                  await onReceiptUpdate(id, updates);
+                }
+              }}
+              onDelete={async (id) => {
+                if (onReceiptDelete) {
+                  await onReceiptDelete(id);
+                  setSelectedReceiptId(null);
+                  if (onReceiptsReload) {
+                    await onReceiptsReload();
+                  }
+                }
+              }}
+              showHeader={true}
+            />
+          </BottomSheet>
+        );
+      })()}
     </div>
   );
 }
