@@ -3,10 +3,12 @@
 import ReceiptHistory from '../components/ReceiptHistory';
 import { useReceipts } from '@/lib/hooks/useReceipts';
 import { useStores } from '@/lib/hooks/useStores';
+import { useUnits } from '@/lib/hooks/useUnits';
 
 export default function HistoryPage() {
   const { receipts, loading, deleteReceipt, updateReceipt, exportReceipts } = useReceipts();
   const { stores } = useStores();
+  const { units } = useUnits();
 
   const handleDelete = async (id: string) => {
     const result = await deleteReceipt(id);
@@ -41,6 +43,7 @@ export default function HistoryPage() {
     <ReceiptHistory
       receipts={receipts}
       stores={stores}
+      units={units}
       onDelete={handleDelete}
       onUpdate={handleUpdate}
       onExport={handleExport}

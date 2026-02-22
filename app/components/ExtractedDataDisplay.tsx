@@ -24,6 +24,7 @@ interface ExtractedDataDisplayProps {
   isProcessing: boolean;
   error: string | null;
   existingItemNames?: string[]; // For autocomplete suggestions
+  units?: string[]; // Available units for dropdown
   onItemChange?: (index: number, updatedItem: ReceiptItem) => void;
 }
 
@@ -32,6 +33,7 @@ export default function ExtractedDataDisplay({
   isProcessing, 
   error,
   existingItemNames = [],
+  units = [],
   onItemChange,
 }: ExtractedDataDisplayProps) {
   const [editedItems, setEditedItems] = useState<ReceiptItem[]>([]);
@@ -70,7 +72,16 @@ export default function ExtractedDataDisplay({
     
     const { index, field } = editingField;
     const updatedItems = [...editedItems];
-    updatedItems[index] = { ...updatedItems[index], [field]: tempValue };
+    
+    // Handle unit field - allow empty string to set to null
+    if (field === 'unit') {
+      updatedItems[index] = { 
+        ...updatedItems[index], 
+        unit: tempValue === '' || tempValue === null ? null : tempValue 
+      };
+    } else {
+      updatedItems[index] = { ...updatedItems[index], [field]: tempValue };
+    }
     
     // Auto-calculate totalPrice if quantity or unitPrice changes
     const item = updatedItems[index];
@@ -244,7 +255,52 @@ export default function ExtractedDataDisplay({
                                 textAlign: 'right',
                               }}
                             />
-                            <span style={{ minWidth: '30px', fontSize: '12px' }}>{item.unit || ''}</span>
+                            <span 
+                              onClick={() => startEditing(index, 'unit', item.unit || '')}
+                              style={{ 
+                                minWidth: '30px', 
+                                fontSize: '12px',
+                                cursor: 'pointer',
+                                padding: '2px 4px',
+                                borderRadius: '4px'
+                              }}
+                              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--ivory-darker)'}
+                              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                              title="Click to edit unit"
+                            >
+                              {item.unit || ''}
+                            </span>
+                            <button onClick={saveFieldEdit} style={{ padding: '4px', cursor: 'pointer', background: 'none', border: 'none' }}>
+                              <Check size={16} color="var(--green-main)" />
+                            </button>
+                            <button onClick={cancelEditing} style={{ padding: '4px', cursor: 'pointer', background: 'none', border: 'none' }}>
+                              <X size={16} color="var(--error-text)" />
+                            </button>
+                          </div>
+                        ) : editingField?.index === index && editingField?.field === 'unit' ? (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end' }}>
+                            <span style={{ fontSize: '14px' }}>{item.quantity || '-'}</span>
+                            <select
+                              value={tempValue || ''}
+                              onChange={(e) => setTempValue(e.target.value)}
+                              onKeyDown={handleFieldKeyDown}
+                              autoFocus
+                              style={{
+                                width: '80px',
+                                padding: '6px 8px',
+                                fontSize: '14px',
+                                border: '2px solid var(--golden-main)',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                              }}
+                            >
+                              <option value="">(no unit)</option>
+                              {units.map(unit => (
+                                <option key={unit} value={unit}>
+                                  {unit}
+                                </option>
+                              ))}
+                            </select>
                             <button onClick={saveFieldEdit} style={{ padding: '4px', cursor: 'pointer', background: 'none', border: 'none' }}>
                               <Check size={16} color="var(--green-main)" />
                             </button>
@@ -253,14 +309,31 @@ export default function ExtractedDataDisplay({
                             </button>
                           </div>
                         ) : (
-                          <span
-                            onClick={() => startEditing(index, 'quantity', item.quantity)}
-                            style={{ cursor: 'pointer', padding: '4px 8px', borderRadius: '4px' }}
-                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--ivory-darker)'}
-                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                          >
-                            {item.quantity || '-'} {item.unit || ''}
-                          </span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end' }}>
+                            <span
+                              onClick={() => startEditing(index, 'quantity', item.quantity)}
+                              style={{ cursor: 'pointer', padding: '4px 8px', borderRadius: '4px' }}
+                              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--ivory-darker)'}
+                              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                            >
+                              {item.quantity || '-'}
+                            </span>
+                            <span
+                              onClick={() => startEditing(index, 'unit', item.unit || '')}
+                              style={{ 
+                                cursor: 'pointer', 
+                                padding: '4px 8px', 
+                                borderRadius: '4px',
+                                fontSize: '12px',
+                                color: item.unit ? 'var(--black-text)' : 'var(--black-tertiary)'
+                              }}
+                              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--ivory-darker)'}
+                              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                              title="Click to edit unit"
+                            >
+                              {item.unit || '(no unit)'}
+                            </span>
+                          </div>
                         )}
                       </td>
                       <td style={{ padding: '16px', textAlign: 'right', verticalAlign: 'middle' }}>

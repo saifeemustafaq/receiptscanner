@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
-import { Camera, Upload, X, CheckCircle, Loader, AlertCircle, Clock } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Camera, Upload, X, CheckCircle, Loader, AlertCircle, Clock, FileText } from 'lucide-react';
 import Button from './Button';
 import Card from './Card';
 
@@ -17,42 +17,84 @@ interface ReceiptUploadProps {
 
 export default function ReceiptUpload({ onReceiptSelect, selectedFile, queueInfo }: ReceiptUploadProps) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewType, setPreviewType] = useState<'image' | 'pdf' | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (files && files.length > 0) {
-      const imageFiles = Array.from(files).filter(file => file.type.startsWith('image/'));
+      // Clean up previous PDF URL if exists
+      if (previewUrl && previewType === 'pdf') {
+        URL.revokeObjectURL(previewUrl);
+      }
+
+      // Accept both images and PDFs
+      const validFiles = Array.from(files).filter(file => 
+        file.type.startsWith('image/') || file.type === 'application/pdf'
+      );
       
-      if (imageFiles.length === 0) {
-        alert('Please select valid image files');
+      if (validFiles.length === 0) {
+        alert('Please select valid image files (JPG, PNG) or PDF files');
         return;
       }
 
       // Enforce 5-receipt limit
-      if (imageFiles.length > 5) {
+      if (validFiles.length > 5) {
         alert('You can upload a maximum of 5 receipts at once. Please select up to 5 files.');
         return;
       }
 
       // Pass all files to parent
-      onReceiptSelect(imageFiles);
+      onReceiptSelect(validFiles);
       
       // Show preview of first file only
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreviewUrl(reader.result as string);
-      };
-      reader.readAsDataURL(imageFiles[0]);
+      const firstFile = validFiles[0];
+      if (firstFile.type === 'application/pdf') {
+        // For PDFs, create object URL for preview
+        const url = URL.createObjectURL(firstFile);
+        setPreviewUrl(url);
+        setPreviewType('pdf');
+      } else {
+        // For images, use FileReader
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setPreviewUrl(reader.result as string);
+          setPreviewType('image');
+        };
+        reader.readAsDataURL(firstFile);
+      }
     }
   };
+
+  // Cleanup object URL on unmount or when preview changes
+  useEffect(() => {
+    return () => {
+      if (previewUrl && previewType === 'pdf') {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl, previewType]);
+
+  // Clean up previous PDF URL when file changes
+  useEffect(() => {
+    if (selectedFile && selectedFile.type !== 'application/pdf' && previewType === 'pdf' && previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+      setPreviewUrl(null);
+      setPreviewType(null);
+    }
+  }, [selectedFile]);
 
   const handleCameraClick = () => cameraInputRef.current?.click();
   const handleUploadClick = () => fileInputRef.current?.click();
 
   const handleRemove = () => {
+    // Clean up object URL if it's a PDF
+    if (previewUrl && previewType === 'pdf') {
+      URL.revokeObjectURL(previewUrl);
+    }
     setPreviewUrl(null);
+    setPreviewType(null);
     onReceiptSelect([]);
     if (fileInputRef.current) fileInputRef.current.value = '';
     if (cameraInputRef.current) cameraInputRef.current.value = '';
@@ -126,7 +168,7 @@ export default function ReceiptUpload({ onReceiptSelect, selectedFile, queueInfo
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/*"
+            accept="image/*,.pdf,application/pdf"
             multiple
             onChange={handleFileSelect}
             style={{ display: 'none' }}
@@ -151,6 +193,9 @@ export default function ReceiptUpload({ onReceiptSelect, selectedFile, queueInfo
               Scan or upload your receipt(s) to get started
             </p>
             <p style={{ color: 'var(--black-tertiary)', fontSize: '14px', marginBottom: '16px' }}>
+              Supports images (JPG, PNG) and PDF files. Multi-page PDFs are automatically processed.
+            </p>
+            <p style={{ color: 'var(--black-tertiary)', fontSize: '14px', marginBottom: '16px' }}>
               You can select up to 5 receipts at once
             </p>
             <div className="flex flex-wrap gap-md justify-center">
@@ -160,7 +205,7 @@ export default function ReceiptUpload({ onReceiptSelect, selectedFile, queueInfo
               </Button>
               <Button variant="secondary" onClick={handleUploadClick}>
                 <Upload size={20} />
-                Upload Image
+                Upload File
               </Button>
             </div>
           </div>
@@ -168,17 +213,45 @@ export default function ReceiptUpload({ onReceiptSelect, selectedFile, queueInfo
       ) : (
         <div className="flex flex-col gap-base">
           <div style={{ position: 'relative' }}>
-            <img 
-              src={previewUrl} 
-              alt="Receipt preview" 
-              style={{
+            {previewType === 'pdf' ? (
+              <div style={{
                 width: '100%',
-                maxHeight: '384px',
-                objectFit: 'contain',
+                minHeight: '384px',
+                maxHeight: '600px',
                 border: '2px solid var(--black-text)',
-                borderRadius: '4px'
-              }}
-            />
+                borderRadius: '4px',
+                backgroundColor: 'var(--ivory-bg)',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '24px'
+              }}>
+                <iframe
+                  src={previewUrl || ''}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    minHeight: '384px',
+                    border: 'none',
+                    borderRadius: '4px'
+                  }}
+                  title="PDF Preview"
+                />
+              </div>
+            ) : (
+              <img 
+                src={previewUrl || ''} 
+                alt="Receipt preview" 
+                style={{
+                  width: '100%',
+                  maxHeight: '384px',
+                  objectFit: 'contain',
+                  border: '2px solid var(--black-text)',
+                  borderRadius: '4px'
+                }}
+              />
+            )}
             <button
               onClick={handleRemove}
               className="btn-danger"
@@ -196,9 +269,17 @@ export default function ReceiptUpload({ onReceiptSelect, selectedFile, queueInfo
           </div>
           
           {selectedFile && (
-            <p style={{ fontSize: '14px', color: 'var(--black-secondary)' }}>
-              <strong>File:</strong> {selectedFile.name}
-            </p>
+            <div style={{ fontSize: '14px', color: 'var(--black-secondary)' }}>
+              <p style={{ margin: '0 0 4px 0' }}>
+                <strong>File:</strong> {selectedFile.name}
+              </p>
+              {selectedFile.type === 'application/pdf' && (
+                <p style={{ margin: 0, color: 'var(--black-tertiary)', fontSize: '12px' }}>
+                  <FileText size={14} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '4px' }} />
+                  PDF document - All pages will be processed automatically
+                </p>
+              )}
+            </div>
           )}
         </div>
       )}

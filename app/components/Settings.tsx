@@ -10,12 +10,17 @@ interface SettingsProps {
   stores: string[];
   onAddStore: (store: string) => void;
   onDeleteStore: (store: string) => void;
+  units: string[];
+  onAddUnit: (unit: string) => void;
+  onDeleteUnit: (unit: string) => void;
   onClearAllData: () => void;
 }
 
-export default function Settings({ stores, onAddStore, onDeleteStore, onClearAllData }: SettingsProps) {
+export default function Settings({ stores, onAddStore, onDeleteStore, units, onAddUnit, onDeleteUnit, onClearAllData }: SettingsProps) {
   const [newStore, setNewStore] = useState('');
+  const [newUnit, setNewUnit] = useState('');
   const [error, setError] = useState('');
+  const [unitError, setUnitError] = useState('');
 
   const handleAddStore = () => {
     if (!newStore.trim()) {
@@ -31,6 +36,23 @@ export default function Settings({ stores, onAddStore, onDeleteStore, onClearAll
     onAddStore(newStore.trim());
     setNewStore('');
     setError('');
+  };
+
+  const handleAddUnit = () => {
+    if (!newUnit.trim()) {
+      setUnitError('Unit cannot be empty');
+      return;
+    }
+    
+    const trimmed = newUnit.trim().toLowerCase();
+    if (units.includes(trimmed)) {
+      setUnitError('This unit already exists');
+      return;
+    }
+
+    onAddUnit(trimmed);
+    setNewUnit('');
+    setUnitError('');
   };
 
   const handleClearAll = () => {
@@ -112,6 +134,75 @@ export default function Settings({ stores, onAddStore, onDeleteStore, onClearAll
                     >
                       <Trash2 size={14} />
                       Delete
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        {/* Unit Management */}
+        <Card>
+          <h2 className="card-title">Manage Units</h2>
+          
+          <div className="flex flex-col gap-base">
+            <p style={{ color: 'var(--black-secondary)', fontSize: '14px' }}>
+              Units are automatically discovered from your receipts. You can also manually add or remove units.
+            </p>
+
+            {/* Add New Unit */}
+            <div className="flex gap-md items-end">
+              <div style={{ flex: 1 }}>
+                <Input
+                  label="Add New Unit"
+                  value={newUnit}
+                  onChange={(e) => {
+                    setNewUnit(e.target.value);
+                    setUnitError('');
+                  }}
+                  placeholder="e.g., oz, lb, g, ml"
+                  error={unitError}
+                />
+              </div>
+              <Button variant="success" onClick={handleAddUnit}>
+                Add Unit
+              </Button>
+            </div>
+
+            {/* Unit List */}
+            <div style={{
+              borderTop: '1px solid var(--ivory-border)',
+              paddingTop: '16px',
+              marginTop: '8px'
+            }}>
+              <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '12px' }}>
+                Available Units ({units.length})
+              </h3>
+              <div className="flex flex-wrap gap-sm">
+                {units.map(unit => (
+                  <div 
+                    key={unit}
+                    className="flex items-center gap-sm"
+                    style={{
+                      padding: '8px 12px',
+                      backgroundColor: 'var(--ivory-bg)',
+                      border: '1px solid var(--ivory-border)',
+                      borderRadius: '4px'
+                    }}
+                  >
+                    <span style={{ fontWeight: 500 }}>{unit}</span>
+                    <button
+                      className="btn btn-danger"
+                      onClick={() => {
+                        if (confirm(`Delete unit "${unit}"? This will not affect existing receipts.`)) {
+                          onDeleteUnit(unit);
+                        }
+                      }}
+                      style={{ padding: '4px 8px', fontSize: '12px' }}
+                      title={`Delete ${unit}`}
+                    >
+                      <Trash2 size={12} />
                     </button>
                   </div>
                 ))}

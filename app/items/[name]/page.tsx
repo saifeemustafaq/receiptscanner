@@ -4,11 +4,15 @@ import { useParams, useRouter } from 'next/navigation';
 import ItemDetail from '../../components/ItemDetail';
 import { getItemByName } from '@/lib/itemsProcessor';
 import { useReceipts } from '@/lib/hooks/useReceipts';
+import { useStores } from '@/lib/hooks/useStores';
+import { useUnits } from '@/lib/hooks/useUnits';
 
 export default function ItemDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const { receipts, loading, loadReceipts } = useReceipts();
+  const { receipts, loading, loadReceipts, updateReceipt, deleteReceipt } = useReceipts();
+  const { stores } = useStores();
+  const { units } = useUnits();
   
   // Decode the URL-encoded item name
   const itemName = decodeURIComponent(params.name as string);
@@ -93,11 +97,34 @@ export default function ItemDetailPage() {
     );
   }
 
+  const handleReceiptUpdate = async (id: string, updates: any) => {
+    const result = await updateReceipt(id, updates);
+    if (!result.success) {
+      alert('Failed to update receipt: ' + result.error);
+      throw new Error(result.error || 'Failed to update receipt');
+    }
+  };
+
+  const handleReceiptDelete = async (id: string) => {
+    const result = await deleteReceipt(id);
+    if (!result.success) {
+      alert('Failed to delete receipt: ' + result.error);
+      throw new Error(result.error || 'Failed to delete receipt');
+    }
+  };
+
   return (
     <ItemDetail 
-      item={item} 
+      item={item}
+      receipts={receipts}
+      stores={stores}
+      units={units}
       onBack={handleBack}
       onItemRename={handleItemRename}
+      onReceiptUpdate={handleReceiptUpdate}
+      onReceiptDelete={handleReceiptDelete}
+      onReceiptsReload={loadReceipts}
+      receiptsLoading={loading}
     />
   );
 }

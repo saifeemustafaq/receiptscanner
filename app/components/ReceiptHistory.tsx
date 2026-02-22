@@ -1,140 +1,132 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Trash2, Download, Eye, Edit2, Check, X } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Trash2, Download, Eye, Filter, X, ChevronDown, ChevronUp } from 'lucide-react';
 import Card from './Card';
 import Button from './Button';
-import Select from './Select';
-import { ExtractedData } from './ExtractedDataDisplay';
+import ReceiptDetailView from './ReceiptDetailView';
+import { SavedReceipt } from '@/lib/types';
 
-interface SavedReceipt {
-  id: string;
-  storeNameScanned: string;
-  storeNameSelected: string;
-  billingDate: string;      // Date on the receipt
-  uploadDate: string;        // Date when uploaded
-  extractedData: ExtractedData;
-  timestamp: string;
-}
+type SortOption = 
+  | 'billingDateDesc' 
+  | 'billingDateAsc' 
+  | 'uploadDateDesc' 
+  | 'uploadDateAsc' 
+  | 'totalDesc' 
+  | 'totalAsc' 
+  | 'storeAsc' 
+  | 'storeDesc';
 
 interface ReceiptHistoryProps {
   receipts: SavedReceipt[];
   stores: string[];
+  units: string[];
   onDelete: (id: string) => void;
   onUpdate: (id: string, updates: any) => void;
   onExport: () => void;
 }
 
-export default function ReceiptHistory({ receipts, stores, onDelete, onUpdate, onExport }: ReceiptHistoryProps) {
+export default function ReceiptHistory({ receipts, stores, units, onDelete, onUpdate, onExport }: ReceiptHistoryProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editedStoreName, setEditedStoreName] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
-  const [editingField, setEditingField] = useState<{receiptId: string, itemIndex: number, field: string} | null>(null);
-  const [tempValue, setTempValue] = useState<any>('');
-  const [editedItems, setEditedItems] = useState<any[]>([]);
+  const [sortBy, setSortBy] = useState<SortOption>('billingDateDesc'); // Default: Latest billing date first
+  const [showFilters, setShowFilters] = useState(false);
+  const [selectedStores, setSelectedStores] = useState<string[]>([]);
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+  const [minAmount, setMinAmount] = useState('');
+  const [maxAmount, setMaxAmount] = useState('');
 
-  // Create store options for dropdown
-  const getStoreOptions = () => {
-    return [
-      { value: '', label: 'Select a store...' },
-      ...stores.map(store => ({ value: store, label: store }))
-    ];
-  };
+  // Filter and sort receipts
+  const filteredAndSortedReceipts = useMemo(() => {
+    let filtered = [...receipts];
 
-  const filteredReceipts = receipts.filter(receipt =>
-    receipt.storeNameSelected.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    receipt.storeNameScanned.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+    // Search filter
+    if (searchTerm) {
+      filtered = filtered.filter(receipt =>
+        receipt.storeNameSelected.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        receipt.storeNameScanned.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Store filter
+    if (selectedStores.length > 0) {
+      filtered = filtered.filter(receipt =>
+        selectedStores.includes(receipt.storeNameSelected)
+      );
+    }
+
+    // Date range filter
+    if (dateFrom) {
+      filtered = filtered.filter(receipt => receipt.billingDate >= dateFrom);
+    }
+    if (dateTo) {
+      filtered = filtered.filter(receipt => receipt.billingDate <= dateTo);
+    }
+
+    // Amount range filter
+    if (minAmount) {
+      const min = parseFloat(minAmount);
+      if (!isNaN(min)) {
+        filtered = filtered.filter(receipt => receipt.extractedData.total >= min);
+      }
+    }
+    if (maxAmount) {
+      const max = parseFloat(maxAmount);
+      if (!isNaN(max)) {
+        filtered = filtered.filter(receipt => receipt.extractedData.total <= max);
+      }
+    }
+
+    // Sort
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'billingDateDesc':
+          return new Date(b.billingDate).getTime() - new Date(a.billingDate).getTime();
+        case 'billingDateAsc':
+          return new Date(a.billingDate).getTime() - new Date(b.billingDate).getTime();
+        case 'uploadDateDesc':
+          return new Date(b.uploadDate).getTime() - new Date(a.uploadDate).getTime();
+        case 'uploadDateAsc':
+          return new Date(a.uploadDate).getTime() - new Date(b.uploadDate).getTime();
+        case 'totalDesc':
+          return b.extractedData.total - a.extractedData.total;
+        case 'totalAsc':
+          return a.extractedData.total - b.extractedData.total;
+        case 'storeAsc':
+          return a.storeNameSelected.localeCompare(b.storeNameSelected);
+        case 'storeDesc':
+          return b.storeNameSelected.localeCompare(a.storeNameSelected);
+        default:
+          return 0;
+      }
+    });
+
+    return filtered;
+  }, [receipts, searchTerm, sortBy, selectedStores, dateFrom, dateTo, minAmount, maxAmount]);
 
   const toggleExpanded = (id: string) => {
     setExpandedId(expandedId === id ? null : id);
   };
 
-  const startEdit = (receipt: SavedReceipt) => {
-    setEditingId(receipt.id);
-    setEditedStoreName(receipt.storeNameSelected);
+  const toggleStoreFilter = (store: string) => {
+    setSelectedStores(prev =>
+      prev.includes(store)
+        ? prev.filter(s => s !== store)
+        : [...prev, store]
+    );
   };
 
-  const cancelEdit = () => {
-    setEditingId(null);
-    setEditedStoreName('');
+  const clearFilters = () => {
+    setSearchTerm('');
+    setSelectedStores([]);
+    setDateFrom('');
+    setDateTo('');
+    setMinAmount('');
+    setMaxAmount('');
   };
 
-  const saveEdit = (id: string) => {
-    if (editedStoreName.trim() && editedStoreName !== '') {
-      onUpdate(id, { storeNameSelected: editedStoreName.trim() });
-      setEditingId(null);
-      setEditedStoreName('');
-    }
-  };
-
-  const handleStoreChange = (e: React.ChangeEvent<HTMLSelectElement>, id: string) => {
-    const newStore = e.target.value;
-    if (newStore && newStore !== '') {
-      setEditedStoreName(newStore);
-    }
-  };
-
-  const startEditingField = (receiptId: string, itemIndex: number, field: string, currentValue: any) => {
-    const receipt = receipts.find(r => r.id === receiptId);
-    if (!receipt) return;
-    
-    setEditedItems(JSON.parse(JSON.stringify(receipt.extractedData.items))); // Deep copy
-    setEditingField({ receiptId, itemIndex, field });
-    setTempValue(currentValue);
-  };
-
-  const cancelEditingField = () => {
-    setEditingField(null);
-    setTempValue('');
-    setEditedItems([]);
-  };
-
-  const saveFieldEdit = () => {
-    if (!editingField) return;
-    
-    const { receiptId, itemIndex, field } = editingField;
-    const updatedItems = [...editedItems];
-    updatedItems[itemIndex] = { ...updatedItems[itemIndex], [field]: tempValue };
-    
-    // Auto-calculate totalPrice if quantity or unitPrice changes
-    const item = updatedItems[itemIndex];
-    if (field === 'quantity' || field === 'unitPrice') {
-      const qty = parseFloat(item.quantity?.toString() || '0');
-      const price = parseFloat(item.unitPrice?.toString() || '0');
-      if (!isNaN(qty) && !isNaN(price)) {
-        updatedItems[itemIndex].totalPrice = qty * price;
-      }
-    }
-    
-    // Calculate new total
-    const newTotal = updatedItems.reduce((sum, item) => sum + (item.totalPrice || 0), 0);
-    
-    // Update the receipt
-    const receipt = receipts.find(r => r.id === receiptId);
-    if (receipt) {
-      onUpdate(receiptId, {
-        extractedData: {
-          ...receipt.extractedData,
-          items: updatedItems,
-          total: newTotal
-        }
-      });
-    }
-    
-    setEditingField(null);
-    setTempValue('');
-    setEditedItems([]);
-  };
-
-  const handleFieldKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      saveFieldEdit();
-    } else if (e.key === 'Escape') {
-      cancelEditingField();
-    }
-  };
+  const hasActiveFilters = searchTerm || selectedStores.length > 0 || dateFrom || dateTo || minAmount || maxAmount;
 
   return (
     <div>
@@ -148,317 +140,296 @@ export default function ReceiptHistory({ receipts, stores, onDelete, onUpdate, o
       <div className="content-section">
         {/* Actions Bar */}
         <Card>
-          <div className="flex flex-wrap items-center justify-between gap-base">
-            <div className="input-group" style={{ flex: 1, minWidth: '250px' }}>
-              <input
-                type="text"
-                className="input-field"
-                placeholder="Search by store name..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+          <div className="flex flex-col gap-base">
+            {/* Search and Sort Row */}
+            <div className="flex flex-wrap items-center justify-between gap-base">
+              <div className="input-group" style={{ flex: 1, minWidth: '250px' }}>
+                <input
+                  type="text"
+                  className="input-field"
+                  placeholder="Search by store name..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+              <div className="flex gap-md items-center">
+                <div className="input-group" style={{ minWidth: '200px' }}>
+                  <select
+                    className="input-field"
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value as SortOption)}
+                    style={{ padding: '10px', fontSize: '14px' }}
+                  >
+                    <option value="billingDateDesc">Billing Date (Latest First)</option>
+                    <option value="billingDateAsc">Billing Date (Oldest First)</option>
+                    <option value="uploadDateDesc">Upload Date (Latest First)</option>
+                    <option value="uploadDateAsc">Upload Date (Oldest First)</option>
+                    <option value="totalDesc">Total Amount (Highest First)</option>
+                    <option value="totalAsc">Total Amount (Lowest First)</option>
+                    <option value="storeAsc">Store Name (A-Z)</option>
+                    <option value="storeDesc">Store Name (Z-A)</option>
+                  </select>
+                </div>
+                <Button 
+                  variant={showFilters ? "primary" : "secondary"} 
+                  onClick={() => setShowFilters(!showFilters)}
+                >
+                  <Filter size={20} />
+                  Filters
+                  {hasActiveFilters && (
+                    <span style={{
+                      marginLeft: '8px',
+                      backgroundColor: 'var(--error-text)',
+                      color: 'white',
+                      borderRadius: '50%',
+                      width: '20px',
+                      height: '20px',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '12px',
+                      fontWeight: 600
+                    }}>
+                      {[searchTerm, selectedStores.length, dateFrom, dateTo, minAmount, maxAmount].filter(Boolean).length}
+                    </span>
+                  )}
+                </Button>
+                <Button variant="primary" onClick={onExport} disabled={receipts.length === 0}>
+                  <Download size={20} />
+                  Export All
+                </Button>
+              </div>
             </div>
-            <div className="flex gap-md">
-              <Button variant="primary" onClick={onExport} disabled={receipts.length === 0}>
-                <Download size={20} />
-                Export All
-              </Button>
-            </div>
+
+            {/* Filters Panel */}
+            {showFilters && (
+              <div style={{
+                borderTop: '1px solid var(--ivory-border)',
+                paddingTop: '16px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '16px'
+              }}>
+                <div className="flex items-center justify-between">
+                  <h3 style={{ fontSize: '16px', fontWeight: 600 }}>Filter Options</h3>
+                  {hasActiveFilters && (
+                    <button
+                      onClick={clearFilters}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: 'var(--golden-main)',
+                        cursor: 'pointer',
+                        fontSize: '14px',
+                        fontWeight: 500,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px'
+                      }}
+                    >
+                      <X size={16} />
+                      Clear All
+                    </button>
+                  )}
+                </div>
+
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                  gap: '16px'
+                }}>
+                  {/* Store Filter */}
+                  <div>
+                    <label style={{
+                      display: 'block',
+                      fontSize: '14px',
+                      fontWeight: 600,
+                      marginBottom: '8px',
+                      color: 'var(--black-text)'
+                    }}>
+                      Filter by Store
+                    </label>
+                    <div style={{
+                      maxHeight: '150px',
+                      overflowY: 'auto',
+                      border: '1px solid var(--ivory-border)',
+                      borderRadius: '4px',
+                      padding: '8px'
+                    }}>
+                      {stores.length === 0 ? (
+                        <p style={{ fontSize: '12px', color: 'var(--black-tertiary)', padding: '8px' }}>
+                          No stores available
+                        </p>
+                      ) : (
+                        stores.map(store => (
+                          <label
+                            key={store}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '8px',
+                              padding: '6px',
+                              cursor: 'pointer',
+                              fontSize: '14px'
+                            }}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={selectedStores.includes(store)}
+                              onChange={() => toggleStoreFilter(store)}
+                              style={{ cursor: 'pointer' }}
+                            />
+                            <span>{store}</span>
+                          </label>
+                        ))
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Date Range Filter */}
+                  <div>
+                    <label style={{
+                      display: 'block',
+                      fontSize: '14px',
+                      fontWeight: 600,
+                      marginBottom: '8px',
+                      color: 'var(--black-text)'
+                    }}>
+                      Billing Date Range
+                    </label>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <input
+                        type="date"
+                        className="input-field"
+                        placeholder="From"
+                        value={dateFrom}
+                        onChange={(e) => setDateFrom(e.target.value)}
+                        max={dateTo || new Date().toISOString().split('T')[0]}
+                        style={{ fontSize: '14px' }}
+                      />
+                      <input
+                        type="date"
+                        className="input-field"
+                        placeholder="To"
+                        value={dateTo}
+                        onChange={(e) => setDateTo(e.target.value)}
+                        min={dateFrom}
+                        max={new Date().toISOString().split('T')[0]}
+                        style={{ fontSize: '14px' }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Amount Range Filter */}
+                  <div>
+                    <label style={{
+                      display: 'block',
+                      fontSize: '14px',
+                      fontWeight: 600,
+                      marginBottom: '8px',
+                      color: 'var(--black-text)'
+                    }}>
+                      Total Amount Range
+                    </label>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <input
+                        type="number"
+                        className="input-field"
+                        placeholder="Min Amount ($)"
+                        value={minAmount}
+                        onChange={(e) => setMinAmount(e.target.value)}
+                        min="0"
+                        step="0.01"
+                        style={{ fontSize: '14px' }}
+                      />
+                      <input
+                        type="number"
+                        className="input-field"
+                        placeholder="Max Amount ($)"
+                        value={maxAmount}
+                        onChange={(e) => setMaxAmount(e.target.value)}
+                        min={minAmount || "0"}
+                        step="0.01"
+                        style={{ fontSize: '14px' }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </Card>
 
+        {/* Results Count */}
+        {filteredAndSortedReceipts.length !== receipts.length && (
+          <div style={{
+            fontSize: '14px',
+            color: 'var(--black-secondary)',
+            padding: '8px 0'
+          }}>
+            Showing {filteredAndSortedReceipts.length} of {receipts.length} receipts
+          </div>
+        )}
+
         {/* Receipts List */}
-        {filteredReceipts.length === 0 ? (
+        {filteredAndSortedReceipts.length === 0 ? (
           <Card>
             <div style={{ textAlign: 'center', padding: '32px', color: 'var(--black-tertiary)' }}>
-              {searchTerm ? 'No receipts match your search' : 'No receipts saved yet'}
+              {hasActiveFilters ? 'No receipts match your filters' : 'No receipts saved yet'}
             </div>
           </Card>
         ) : (
-          filteredReceipts.map(receipt => (
-            <Card key={receipt.id}>
-              <div className="flex flex-col gap-base">
-                {/* Receipt Header */}
-                <div className="flex items-center justify-between">
-                  <div style={{ flex: 1 }}>
-                    {editingId === receipt.id ? (
-                      <div className="flex items-center gap-sm" style={{ marginBottom: '8px' }}>
-                        <div style={{ minWidth: '200px' }}>
-                          <Select
-                            options={getStoreOptions()}
-                            value={editedStoreName}
-                            onChange={(e) => handleStoreChange(e, receipt.id)}
-                          />
-                        </div>
-                        <button
-                          className="btn btn-success"
-                          onClick={() => saveEdit(receipt.id)}
-                          style={{ padding: '8px' }}
-                          disabled={!editedStoreName || editedStoreName === ''}
-                        >
-                          <Check size={16} />
-                        </button>
-                        <button
-                          className="btn btn-secondary"
-                          onClick={cancelEdit}
-                          style={{ padding: '8px' }}
-                        >
-                          <X size={16} />
-                        </button>
+          filteredAndSortedReceipts.map(receipt => (
+            <div key={receipt.id}>
+              {expandedId === receipt.id ? (
+                <ReceiptDetailView
+                  receipt={receipt}
+                  stores={stores}
+                  units={units}
+                  onUpdate={onUpdate}
+                  onDelete={onDelete}
+                  showHeader={true}
+                />
+              ) : (
+                <Card>
+                  <div className="flex items-center justify-between">
+                    <div style={{ flex: 1 }}>
+                      <h3 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '4px' }}>
+                        {receipt.storeNameSelected}
+                      </h3>
+                      <div style={{ fontSize: '14px', color: 'var(--black-secondary)' }}>
+                        <p><strong>Billing Date:</strong> {new Date(receipt.billingDate + 'T00:00:00').toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles' })}</p>
+                        <p><strong>Uploaded:</strong> {new Date(receipt.uploadDate + 'T00:00:00').toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles' })}</p>
+                        <p><strong>Total:</strong> ${receipt.extractedData.total.toFixed(2)} • 
+                           <span style={{ marginLeft: '8px' }}>{receipt.extractedData.items.length} items</span>
+                        </p>
                       </div>
-                    ) : (
-                      <div className="flex items-center gap-sm" style={{ marginBottom: '4px' }}>
-                        <h3 style={{ fontSize: '20px', fontWeight: 600 }}>
-                          {receipt.storeNameSelected}
-                        </h3>
-                        <button
-                          onClick={() => startEdit(receipt)}
-                          style={{
-                            background: 'none',
-                            border: 'none',
-                            color: 'var(--golden-main)',
-                            cursor: 'pointer',
-                            padding: '4px'
-                          }}
-                          title="Edit store name"
-                        >
-                          <Edit2 size={16} />
-                        </button>
-                      </div>
-                    )}
-                    <div style={{ fontSize: '14px', color: 'var(--black-secondary)' }}>
-                      <p><strong>Billing Date:</strong> {new Date(receipt.billingDate + 'T00:00:00').toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles' })}</p>
-                      <p><strong>Uploaded:</strong> {new Date(receipt.uploadDate + 'T00:00:00').toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles' })}</p>
-                      <p><strong>Total:</strong> ${receipt.extractedData.total.toFixed(2)} • 
-                         <span style={{ marginLeft: '8px' }}>{receipt.extractedData.items.length} items</span>
-                      </p>
+                    </div>
+                    <div className="flex gap-sm">
+                      <button
+                        className="btn btn-secondary"
+                        onClick={() => toggleExpanded(receipt.id)}
+                        style={{ padding: '8px 16px' }}
+                      >
+                        <Eye size={16} />
+                        View
+                      </button>
+                      <button
+                        className="btn btn-danger"
+                        onClick={() => {
+                          if (confirm('Delete this receipt?')) {
+                            onDelete(receipt.id);
+                          }
+                        }}
+                        style={{ padding: '8px 16px' }}
+                      >
+                        <Trash2 size={16} />
+                      </button>
                     </div>
                   </div>
-                  <div className="flex gap-sm">
-                    <button
-                      className="btn btn-secondary"
-                      onClick={() => toggleExpanded(receipt.id)}
-                      style={{ padding: '8px 16px' }}
-                    >
-                      <Eye size={16} />
-                      {expandedId === receipt.id ? 'Hide' : 'View'}
-                    </button>
-                    <button
-                      className="btn btn-danger"
-                      onClick={() => {
-                        if (confirm('Delete this receipt?')) {
-                          onDelete(receipt.id);
-                        }
-                      }}
-                      style={{ padding: '8px 16px' }}
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Expanded Details */}
-                {expandedId === receipt.id && (
-                  <div style={{
-                    borderTop: '1px solid var(--ivory-border)',
-                    paddingTop: '16px',
-                    marginTop: '8px'
-                  }}>
-                    {receipt.storeNameScanned && receipt.storeNameScanned !== receipt.storeNameSelected && (
-                      <p style={{ fontSize: '14px', marginBottom: '12px', color: 'var(--black-secondary)' }}>
-                        <strong>Detected Store:</strong> {receipt.storeNameScanned}
-                      </p>
-                    )}
-                    
-                    <div style={{ overflowX: 'auto' }}>
-                      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                        <thead>
-                          <tr style={{
-                            backgroundColor: 'var(--ivory-darker)',
-                            borderBottom: '2px solid var(--black-text)'
-                          }}>
-                            <th style={{ padding: '12px', textAlign: 'left' }}>Item</th>
-                            <th style={{ padding: '12px', textAlign: 'right' }}>Qty</th>
-                            <th style={{ padding: '12px', textAlign: 'right' }}>Unit Price</th>
-                            <th style={{ padding: '12px', textAlign: 'right' }}>Total</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {(editingField?.receiptId === receipt.id ? editedItems : receipt.extractedData.items).map((item, idx) => (
-                            <tr key={idx} style={{ borderBottom: '1px solid var(--ivory-border)' }}>
-                              <td style={{ padding: '12px' }}>
-                                {editingField?.receiptId === receipt.id && editingField?.itemIndex === idx && editingField?.field === 'name' ? (
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                    <input
-                                      type="text"
-                                      value={tempValue}
-                                      onChange={(e) => setTempValue(e.target.value)}
-                                      onKeyDown={handleFieldKeyDown}
-                                      autoFocus
-                                      style={{
-                                        width: '100%',
-                                        padding: '6px 8px',
-                                        fontSize: '14px',
-                                        border: '2px solid var(--golden-main)',
-                                        borderRadius: '4px',
-                                      }}
-                                    />
-                                    <button onClick={saveFieldEdit} style={{ padding: '4px', cursor: 'pointer', background: 'none', border: 'none' }}>
-                                      <Check size={16} color="var(--green-main)" />
-                                    </button>
-                                    <button onClick={cancelEditingField} style={{ padding: '4px', cursor: 'pointer', background: 'none', border: 'none' }}>
-                                      <X size={16} color="var(--error-text)" />
-                                    </button>
-                                  </div>
-                                ) : (
-                                  <span
-                                    onClick={() => startEditingField(receipt.id, idx, 'name', item.name)}
-                                    style={{ cursor: 'pointer', padding: '4px 8px', borderRadius: '4px' }}
-                                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--ivory-darker)'}
-                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                                  >
-                                    {item.name}
-                                  </span>
-                                )}
-                              </td>
-                              <td style={{ padding: '12px', textAlign: 'right' }}>
-                                {editingField?.receiptId === receipt.id && editingField?.itemIndex === idx && editingField?.field === 'quantity' ? (
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end' }}>
-                                    <input
-                                      type="number"
-                                      value={tempValue}
-                                      onChange={(e) => setTempValue(parseFloat(e.target.value) || 0)}
-                                      onKeyDown={handleFieldKeyDown}
-                                      autoFocus
-                                      step="0.01"
-                                      style={{
-                                        width: '70px',
-                                        padding: '6px 8px',
-                                        fontSize: '14px',
-                                        border: '2px solid var(--golden-main)',
-                                        borderRadius: '4px',
-                                        textAlign: 'right',
-                                      }}
-                                    />
-                                    <span style={{ minWidth: '30px', fontSize: '12px' }}>{item.unit || ''}</span>
-                                    <button onClick={saveFieldEdit} style={{ padding: '4px', cursor: 'pointer', background: 'none', border: 'none' }}>
-                                      <Check size={16} color="var(--green-main)" />
-                                    </button>
-                                    <button onClick={cancelEditingField} style={{ padding: '4px', cursor: 'pointer', background: 'none', border: 'none' }}>
-                                      <X size={16} color="var(--error-text)" />
-                                    </button>
-                                  </div>
-                                ) : (
-                                  <span
-                                    onClick={() => startEditingField(receipt.id, idx, 'quantity', item.quantity)}
-                                    style={{ cursor: 'pointer', padding: '4px 8px', borderRadius: '4px' }}
-                                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--ivory-darker)'}
-                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                                  >
-                                    {item.quantity || '-'} {item.unit || ''}
-                                  </span>
-                                )}
-                              </td>
-                              <td style={{ padding: '12px', textAlign: 'right' }}>
-                                {editingField?.receiptId === receipt.id && editingField?.itemIndex === idx && editingField?.field === 'unitPrice' ? (
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end' }}>
-                                    <input
-                                      type="number"
-                                      value={tempValue}
-                                      onChange={(e) => setTempValue(parseFloat(e.target.value) || 0)}
-                                      onKeyDown={handleFieldKeyDown}
-                                      autoFocus
-                                      step="0.01"
-                                      placeholder="0.00"
-                                      style={{
-                                        width: '90px',
-                                        padding: '6px 8px',
-                                        fontSize: '14px',
-                                        border: '2px solid var(--golden-main)',
-                                        borderRadius: '4px',
-                                        textAlign: 'right',
-                                      }}
-                                    />
-                                    <button onClick={saveFieldEdit} style={{ padding: '4px', cursor: 'pointer', background: 'none', border: 'none' }}>
-                                      <Check size={16} color="var(--green-main)" />
-                                    </button>
-                                    <button onClick={cancelEditingField} style={{ padding: '4px', cursor: 'pointer', background: 'none', border: 'none' }}>
-                                      <X size={16} color="var(--error-text)" />
-                                    </button>
-                                  </div>
-                                ) : (
-                                  <span
-                                    onClick={() => startEditingField(receipt.id, idx, 'unitPrice', item.unitPrice)}
-                                    style={{ cursor: 'pointer', padding: '4px 8px', borderRadius: '4px' }}
-                                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--ivory-darker)'}
-                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                                  >
-                                    {item.unitPrice ? `$${item.unitPrice.toFixed(2)}` : '-'}
-                                  </span>
-                                )}
-                              </td>
-                              <td style={{ padding: '12px', textAlign: 'right', fontWeight: 600 }}>
-                                {editingField?.receiptId === receipt.id && editingField?.itemIndex === idx && editingField?.field === 'totalPrice' ? (
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end' }}>
-                                    <input
-                                      type="number"
-                                      value={tempValue}
-                                      onChange={(e) => setTempValue(parseFloat(e.target.value) || 0)}
-                                      onKeyDown={handleFieldKeyDown}
-                                      autoFocus
-                                      step="0.01"
-                                      placeholder="0.00"
-                                      style={{
-                                        width: '90px',
-                                        padding: '6px 8px',
-                                        fontSize: '14px',
-                                        border: '2px solid var(--golden-main)',
-                                        borderRadius: '4px',
-                                        textAlign: 'right',
-                                        fontWeight: 600,
-                                      }}
-                                    />
-                                    <button onClick={saveFieldEdit} style={{ padding: '4px', cursor: 'pointer', background: 'none', border: 'none' }}>
-                                      <Check size={16} color="var(--green-main)" />
-                                    </button>
-                                    <button onClick={cancelEditingField} style={{ padding: '4px', cursor: 'pointer', background: 'none', border: 'none' }}>
-                                      <X size={16} color="var(--error-text)" />
-                                    </button>
-                                  </div>
-                                ) : (
-                                  <span
-                                    onClick={() => startEditingField(receipt.id, idx, 'totalPrice', item.totalPrice)}
-                                    style={{ cursor: 'pointer', padding: '4px 8px', borderRadius: '4px' }}
-                                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--ivory-darker)'}
-                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                                  >
-                                    {item.totalPrice != null ? `$${item.totalPrice.toFixed(2)}` : '-'}
-                                  </span>
-                                )}
-                              </td>
-                            </tr>
-                          ))}
-                          <tr style={{
-                            backgroundColor: 'var(--green-pale)',
-                            borderTop: '2px solid var(--black-text)'
-                          }}>
-                            <td colSpan={3} style={{ padding: '12px', textAlign: 'right', fontWeight: 700 }}>
-                              TOTAL:
-                            </td>
-                            <td style={{ padding: '12px', textAlign: 'right', fontWeight: 700 }}>
-                              {editingField?.receiptId === receipt.id && editedItems.length > 0
-                                ? `$${editedItems.reduce((sum, item) => sum + (item.totalPrice || 0), 0).toFixed(2)}`
-                                : `$${receipt.extractedData.total?.toFixed(2) || '0.00'}`
-                              }
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </Card>
+                </Card>
+              )}
+            </div>
           ))
         )}
       </div>

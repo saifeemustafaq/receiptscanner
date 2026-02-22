@@ -1,13 +1,17 @@
-# Receipt Data Storage
+# Receipt Scanner Data Storage
 
-This directory contains all saved receipt data in JSON format.
+This directory contains all persistent data for the Receipt Scanner application in JSON format.
 
 ## Structure
 
 ```
 data/
-└── receipts/
-    └── receipts_data.json    # All receipts stored here
+├── receipts/
+│   └── receipts_data.json    # All receipts stored here
+├── stores/
+│   └── stores_data.json       # All store names stored here
+└── units/
+    └── units_data.json        # All measurement units stored here
 ```
 
 ## Data Format
@@ -52,7 +56,62 @@ Each receipt is stored with the following structure:
 
 It's recommended to regularly backup this file. You can also use the "Export All" feature in the app to download receipts.
 
+## Stores Data
+
+The `stores/` directory contains user-managed store names.
+
+### stores_data.json
+
+A simple array of store name strings:
+
+```json
+[
+  "Costco",
+  "Kroger",
+  "Target",
+  "Walmart",
+  "Whole Foods"
+]
+```
+
+- Stores are managed through the Settings page
+- New stores can be added manually
+- Stores are sorted alphabetically
+- Case-insensitive duplicate detection
+
+## Units Data
+
+The `units/` directory contains measurement units used in receipts.
+
+### units_data.json
+
+A simple array of unit strings (lowercase):
+
+```json
+[
+  "ct",
+  "ea",
+  "g",
+  "kg",
+  "lb",
+  "lbs",
+  "l",
+  "ml",
+  "oz",
+  "pcs"
+]
+```
+
+- Units are automatically discovered from receipts
+- New units can be added manually through the Settings page
+- Units are stored in lowercase and sorted alphabetically
+- Default units are provided on first run
+
+## Backup
+
+It's recommended to regularly backup all files in this directory. You can also use the "Export All" feature in the app to download receipts.
+
 ## Note
 
-This file is managed automatically by the application. Manual edits should be done carefully to maintain JSON validity.
+All files are managed automatically by the application. Manual edits should be done carefully to maintain JSON validity.
 

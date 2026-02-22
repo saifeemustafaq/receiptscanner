@@ -308,24 +308,24 @@
       "items": [
         {
           "name": "ANAND RATLAMI SEV 340GM/120Z",
-          "quantity": 340,
-          "unitPrice": 0.0111,
+          "quantity": 1,
+          "unitPrice": 3.79,
           "totalPrice": 3.79,
-          "unit": "g"
+          "unit": "pkt"
         },
         {
           "name": "ADARSH BANANA CHIPS CHILLI 340GM",
-          "quantity": 340,
-          "unitPrice": 0.0088,
+          "quantity": 1,
+          "unitPrice": 2.99,
           "totalPrice": 2.99,
-          "unit": "g"
+          "unit": "pkt"
         },
         {
           "name": "ANAND BANANA CHIPS CHILLI 170GM",
-          "quantity": 170,
-          "unitPrice": 0.0223,
+          "quantity": 1,
+          "unitPrice": 3.79,
           "totalPrice": 3.79,
-          "unit": "g"
+          "unit": "pkt"
         },
         {
           "name": "Mushroom Box",
@@ -391,7 +391,7 @@
           "unit": "oz"
         }
       ],
-      "total": 40.66
+      "total": 40.660000000000004
     },
     "timestamp": "2025-12-12T05:57:55.657Z"
   },
@@ -434,14 +434,14 @@
           "unit": null
         },
         {
-          "name": "HALDIRAM?S SAMBAR 283GM/100Z",
+          "name": "HALDIRAM?S SAMBAR 283GM/10oz",
           "quantity": 283,
           "unitPrice": 0.0123,
           "totalPrice": 3.49,
           "unit": "g"
         },
         {
-          "name": "HALDIRAM?S SAMBAR 283GM/1002",
+          "name": "HALDIRAM?S SAMBAR 283GM/10oz",
           "quantity": 283,
           "unitPrice": 0.0123,
           "totalPrice": 3.49,
@@ -1288,14 +1288,14 @@
           "unit": "lb"
         },
         {
-          "name": "HALDIRAM?S SAMBAR 283GM/100Z",
+          "name": "HALDIRAM?S SAMBAR 283GM/10oz",
           "quantity": 1,
           "unitPrice": 3.49,
           "totalPrice": 3.49,
           "unit": null
         },
         {
-          "name": "HALDIRAM?S SAMBAR 283GM/100Z",
+          "name": "HALDIRAM?S SAMBAR 283GM/10oz",
           "quantity": 1,
           "unitPrice": 3.49,
           "totalPrice": 3.49,
@@ -1305,5 +1305,514 @@
       "total": 34.33
     },
     "timestamp": "2025-12-12T05:59:41.272Z"
+  },
+  {
+    "id": "1765770789609",
+    "storeNameScanned": "Costco Business Center Same-Day",
+    "storeNameSelected": "Costco",
+    "billingDate": "2025-12-12",
+    "uploadDate": "2025-12-14",
+    "extractedData": {
+      "storeNameScanned": "Costco Business Center Same-Day",
+      "receiptDate": "2025-12-14",
+      "items": [
+        {
+          "name": "Diamond Crystal Granulated Salt, 25 lb",
+          "quantity": 1,
+          "unitPrice": 6.15,
+          "totalPrice": 6.15,
+          "unit": null
+        },
+        {
+          "name": "Heinz Tomato Ketchup, 44 oz, 3 ct",
+          "quantity": 1,
+          "unitPrice": 12.75,
+          "totalPrice": 12.75,
+          "unit": null
+        },
+        {
+          "name": "Sweet Baby Ray's Barbecue Sauce, 160 oz",
+          "quantity": 1,
+          "unitPrice": 13.74,
+          "totalPrice": 13.74,
+          "unit": null
+        },
+        {
+          "name": "Royal Chef's Secret Basmati Rice, Extra Long Grain, 40 lbs",
+          "quantity": 1,
+          "unitPrice": 60.49,
+          "totalPrice": 60.49,
+          "unit": null
+        },
+        {
+          "name": "Flav-R-Pac Cut Green Beans, 5 lbs",
+          "quantity": 2,
+          "unitPrice": 14.28,
+          "totalPrice": 14.28,
+          "unit": null
+        },
+        {
+          "name": "Roma Tomatoes, 25 lbs",
+          "quantity": 3,
+          "unitPrice": 59.31,
+          "totalPrice": 59.31,
+          "unit": null
+        },
+        {
+          "name": "Jumbo Yellow Onions, 50 lbs",
+          "quantity": 1,
+          "unitPrice": 10.77,
+          "totalPrice": 10.77,
+          "unit": null
+        },
+        {
+          "name": "Organic Baby Carrots, Cut & Peeled, 2 lbs, 2 ct",
+          "quantity": 2,
+          "unitPrice": 15.38,
+          "totalPrice": 15.38,
+          "unit": null
+        },
+        {
+          "name": "Ginger Root, 3 lbs",
+          "quantity": 2,
+          "unitPrice": 20.44,
+          "totalPrice": 20.44,
+          "unit": null
+        },
+        {
+          "name": "Half & Half, Half Gallon",
+          "quantity": 4,
+          "unitPrice": 19.76,
+          "totalPrice": 19.76,
+          "unit": null
+        },
+        {
+          "name": "Kirkland Signature Fancy Whole Cashews, Unsalted, 40 oz",
+          "quantity": 2,
+          "unitPrice": 35.18,
+          "totalPrice": 35.18,
+          "unit": null
+        },
+        {
+          "name": "McCormick Garlic Salt, 41.25 oz",
+          "quantity": 1,
+          "unitPrice": 5.16,
+          "totalPrice": 5.16,
+          "unit": null
+        },
+        {
+          "name": "Kirkland Signature Wildflower Honey, 5 lbs",
+          "quantity": 1,
+          "unitPrice": 14.29,
+          "totalPrice": 14.29,
+          "unit": null
+        }
+      ],
+      "total": 285.7
+    },
+    "timestamp": "2025-12-15T03:53:09.609Z"
+  },
+  {
+    "id": "1765770824176",
+    "storeNameScanned": "COSTCO",
+    "storeNameSelected": "Costco",
+    "billingDate": "2025-12-05",
+    "uploadDate": "2025-12-14",
+    "extractedData": {
+      "storeNameScanned": "COSTCO",
+      "receiptDate": "2025-12-14",
+      "items": [
+        {
+          "name": "Royal Chef's Secret Basmati Rice, Extra Long Grain, 40 lbs",
+          "quantity": 1,
+          "unitPrice": 60.49,
+          "totalPrice": 60.49,
+          "unit": null
+        },
+        {
+          "name": "Kirkland Signature Vegetable Oil, 1.25 Gallon",
+          "quantity": 1,
+          "unitPrice": 10.33,
+          "totalPrice": 10.33,
+          "unit": null
+        },
+        {
+          "name": "Del Monte Golden Sweet Whole Kernel Corn, #10 can, 6 lbs 10 oz",
+          "quantity": 5,
+          "unitPrice": 27.45,
+          "totalPrice": 27.45,
+          "unit": null
+        },
+        {
+          "name": "Kirkland Signature Stir Fry Vegetable Blend, 5.5 lbs",
+          "quantity": 4,
+          "unitPrice": 42.64,
+          "totalPrice": 42.64,
+          "unit": null
+        },
+        {
+          "name": "Roma Tomatoes, 25 lbs",
+          "quantity": 3,
+          "unitPrice": 75.87,
+          "totalPrice": 75.87,
+          "unit": null
+        },
+        {
+          "name": "Cabbage Coleslaw, 5 lbs",
+          "quantity": 2,
+          "unitPrice": 8.78,
+          "totalPrice": 8.78,
+          "unit": null
+        },
+        {
+          "name": "Mixed Bell Peppers, 6 ct",
+          "quantity": 6,
+          "unitPrice": 56.04,
+          "totalPrice": 56.04,
+          "unit": null
+        },
+        {
+          "name": "PHILADELPHIA Cream Cheese Spread, Original, 48 oz",
+          "quantity": 2,
+          "unitPrice": 23.08,
+          "totalPrice": 23.08,
+          "unit": null
+        },
+        {
+          "name": "Kirkland Signature Butter, Unsalted, Stick, 1 lb, 4 ct",
+          "quantity": 2,
+          "unitPrice": 25.28,
+          "totalPrice": 25.28,
+          "unit": null
+        },
+        {
+          "name": "Cheswick Mild Cheddar & Monterey Jack Cheese, Shredded, 5 lbs",
+          "quantity": 1,
+          "unitPrice": 13.52,
+          "totalPrice": 13.52,
+          "unit": null
+        },
+        {
+          "name": "Producers Heavy Whipping Cream, Half Gallon",
+          "quantity": 3,
+          "unitPrice": 29.34,
+          "totalPrice": 29.34,
+          "unit": null
+        }
+      ],
+      "total": 370.82
+    },
+    "timestamp": "2025-12-15T03:53:44.176Z"
+  },
+  {
+    "id": "1765770835591",
+    "storeNameScanned": "COSTCO BUSINESS CENTER",
+    "storeNameSelected": "Costco",
+    "billingDate": "2025-11-28",
+    "uploadDate": "2025-12-14",
+    "extractedData": {
+      "storeNameScanned": "COSTCO BUSINESS CENTER",
+      "receiptDate": "2025-12-14",
+      "items": [
+        {
+          "name": "Lay's Potato Chips, Classic, 1.5 oz, 64 ct",
+          "quantity": 1,
+          "unitPrice": 46.74,
+          "totalPrice": 46.74,
+          "unit": null
+        },
+        {
+          "name": "Gopi Indian Style Whole Milk Yogurt, Plain, 64 oz",
+          "quantity": 4,
+          "unitPrice": 6.15,
+          "totalPrice": 24.6,
+          "unit": null
+        },
+        {
+          "name": "Producers Heavy Whipping Cream, Half Gallon",
+          "quantity": 4,
+          "unitPrice": 9.89,
+          "totalPrice": 39.56,
+          "unit": null
+        },
+        {
+          "name": "Half & Half, Half Gallon",
+          "quantity": 6,
+          "unitPrice": 4.94,
+          "totalPrice": 29.64,
+          "unit": null
+        },
+        {
+          "name": "Roma Tomatoes, 25 lbs",
+          "quantity": 4,
+          "unitPrice": 25.29,
+          "totalPrice": 101.16,
+          "unit": null
+        },
+        {
+          "name": "Diamond Crystal Granulated Salt, 25 Ib",
+          "quantity": 1,
+          "unitPrice": 6.15,
+          "totalPrice": 6.15,
+          "unit": null
+        },
+        {
+          "name": "Olde Thompson Fancy Paprika, 5 lbs",
+          "quantity": 1,
+          "unitPrice": 22.54,
+          "totalPrice": 22.54,
+          "unit": null
+        },
+        {
+          "name": "Sliced Raw Almonds, Baking Nuts, 5 lbs",
+          "quantity": 1,
+          "unitPrice": 23.75,
+          "totalPrice": 23.75,
+          "unit": null
+        },
+        {
+          "name": "Royal Chef's Secret Basmati Rice, Extra Long Grain, 40 lbs",
+          "quantity": 2,
+          "unitPrice": 60.49,
+          "totalPrice": 120.98,
+          "unit": null
+        },
+        {
+          "name": "Kirkland Signature Vegetable Oil, 1.25 Gallon",
+          "quantity": 3,
+          "unitPrice": 10.33,
+          "totalPrice": 30.99,
+          "unit": null
+        },
+        {
+          "name": "Kirkland Signature Whole Milk, 1 Gallon, 2 ct",
+          "quantity": 1,
+          "unitPrice": 7.14,
+          "totalPrice": 7.14,
+          "unit": null
+        }
+      ],
+      "total": 451.25
+    },
+    "timestamp": "2025-12-15T03:53:55.591Z"
+  },
+  {
+    "id": "1765770852769",
+    "storeNameScanned": "COSTCO BUSINESS CENTER",
+    "storeNameSelected": "Costco",
+    "billingDate": "2025-11-24",
+    "uploadDate": "2025-12-14",
+    "extractedData": {
+      "storeNameScanned": "COSTCO BUSINESS CENTER",
+      "receiptDate": "2025-12-14",
+      "items": [
+        {
+          "name": "Karoun Dairies Plain Yogurt, 32 lbs",
+          "quantity": 4,
+          "unitPrice": 38.27,
+          "totalPrice": 153.08,
+          "unit": null
+        },
+        {
+          "name": "Ginger Root, 3 lbs",
+          "quantity": 4,
+          "unitPrice": 10.22,
+          "totalPrice": 40.88,
+          "unit": null
+        },
+        {
+          "name": "Early California Sliced Black Olives, 55 oz",
+          "quantity": 2,
+          "unitPrice": 12.64,
+          "totalPrice": 25.28,
+          "unit": null
+        }
+      ],
+      "total": 222.24
+    },
+    "timestamp": "2025-12-15T03:54:12.769Z"
+  },
+  {
+    "id": "1765770865632",
+    "storeNameScanned": "COSTCO",
+    "storeNameSelected": "Costco",
+    "billingDate": "2025-11-22",
+    "uploadDate": "2025-12-14",
+    "extractedData": {
+      "storeNameScanned": "COSTCO",
+      "receiptDate": "2025-12-14",
+      "items": [
+        {
+          "name": "Kirkland Signature Granulated Garlic, 18 oz",
+          "quantity": 2,
+          "unitPrice": 9.34,
+          "totalPrice": 18.68,
+          "unit": null
+        },
+        {
+          "name": "Del Monte Golden Sweet Whole Kernel Corn, #10 can, 6 lbs 10 oz",
+          "quantity": 5,
+          "unitPrice": 5.49,
+          "totalPrice": 27.45,
+          "unit": null
+        },
+        {
+          "name": "Teasdale Black Beans, #10 can, 6 lbs 12 oz",
+          "quantity": 1,
+          "unitPrice": 6.04,
+          "totalPrice": 6.04,
+          "unit": null
+        },
+        {
+          "name": "Roma Tomatoes, 25 lbs",
+          "quantity": 3,
+          "unitPrice": 20.67,
+          "totalPrice": 62.01,
+          "unit": null
+        },
+        {
+          "name": "Lawry's Coarse Ground Garlic Salt with Parsley, 33 oz",
+          "quantity": 2,
+          "unitPrice": 10.33,
+          "totalPrice": 20.66,
+          "unit": null
+        },
+        {
+          "name": "Kirkland Signature Whole Black Peppercorns, 14.1 oz",
+          "quantity": 1,
+          "unitPrice": 8.24,
+          "totalPrice": 8.24,
+          "unit": null
+        },
+        {
+          "name": "McCormick Lemon & Pepper Seasoning, 28 oz",
+          "quantity": 2,
+          "unitPrice": 9.45,
+          "totalPrice": 18.9,
+          "unit": null
+        },
+        {
+          "name": "McCormick Granulated Onion, 18 OZ",
+          "quantity": 2,
+          "unitPrice": 6.92,
+          "totalPrice": 13.84,
+          "unit": null
+        },
+        {
+          "name": "Best Foods Real Mayonnaise, 1 Gallon",
+          "quantity": 1,
+          "unitPrice": 17.59,
+          "totalPrice": 17.59,
+          "unit": null
+        },
+        {
+          "name": "Teasdale Kidney Beans, #10 can, 6 lbs 12 oz",
+          "quantity": 1,
+          "unitPrice": 7.03,
+          "totalPrice": 7.03,
+          "unit": null
+        },
+        {
+          "name": "Royal Chef's Secret Basmati Rice, Extra Long Grain, 40 lbs",
+          "quantity": 2,
+          "unitPrice": 60.49,
+          "totalPrice": 120.98,
+          "unit": null
+        },
+        {
+          "name": "Idahoan Real Premium Mashed Potatoes, 3.25 lbs",
+          "quantity": 3,
+          "unitPrice": 10.99,
+          "totalPrice": 32.97,
+          "unit": null
+        },
+        {
+          "name": "Kirkland Signature Vegetable Oil, 1.25 Gallon",
+          "quantity": 6,
+          "unitPrice": 10.33,
+          "totalPrice": 61.98,
+          "unit": null
+        },
+        {
+          "name": "Mixed Bell Peppers, 6 ct",
+          "quantity": 6,
+          "unitPrice": 9.34,
+          "totalPrice": 56.04,
+          "unit": null
+        },
+        {
+          "name": "Cocktail Cucumbers, 1.5 lbs",
+          "quantity": 4,
+          "unitPrice": 7.14,
+          "totalPrice": 28.56,
+          "unit": null
+        },
+        {
+          "name": "Kirkland Signature Butter, Unsalted, Stick, 1 lb, 4 ct",
+          "quantity": 4,
+          "unitPrice": 12.64,
+          "totalPrice": 50.56,
+          "unit": null
+        },
+        {
+          "name": "Kirkland Signature Whole Milk, 1 Gallon, 2 ct",
+          "quantity": 3,
+          "unitPrice": 7.14,
+          "totalPrice": 21.42,
+          "unit": null
+        },
+        {
+          "name": "Producers Heavy Whipping Cream, Half Gallon",
+          "quantity": 8,
+          "unitPrice": 9.89,
+          "totalPrice": 79.12,
+          "unit": null
+        },
+        {
+          "name": "King's Hawaiian Sweet Rolls, Original, 32 ct",
+          "quantity": 15,
+          "unitPrice": 7.69,
+          "totalPrice": 115.35,
+          "unit": null
+        },
+        {
+          "name": "Jumbo Yellow Onions, 50 lbs",
+          "quantity": 2,
+          "unitPrice": 11.43,
+          "totalPrice": 22.86,
+          "unit": null
+        },
+        {
+          "name": "Gopi Indian Style Whole Milk Yogurt, Plain, 64 oz",
+          "quantity": 3,
+          "unitPrice": 6.15,
+          "totalPrice": 18.45,
+          "unit": null
+        },
+        {
+          "name": "Kirkland Signature Walnuts, Baking Nuts, 3 lbs",
+          "quantity": 1,
+          "unitPrice": 14.29,
+          "totalPrice": 14.29,
+          "unit": null
+        },
+        {
+          "name": "Kirkland Signature Organic Extra Virgin Olive Oil, 2 Liter",
+          "quantity": 1,
+          "unitPrice": 19.24,
+          "totalPrice": 19.24,
+          "unit": null
+        },
+        {
+          "name": "Half & Half, Half Gallon",
+          "quantity": 10,
+          "unitPrice": 4.94,
+          "totalPrice": 49.4,
+          "unit": null
+        }
+      ],
+      "total": 909.66
+    },
+    "timestamp": "2025-12-15T03:54:25.632Z"
   }
 ]

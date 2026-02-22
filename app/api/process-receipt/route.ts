@@ -27,7 +27,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('📤 Uploading receipt to Gemini...');
+    const fileType = file.type;
+    const isPDF = fileType === 'application/pdf';
+    const isImage = fileType.startsWith('image/');
+    
+    if (!isPDF && !isImage) {
+      return NextResponse.json(
+        { error: 'Unsupported file type. Please upload an image (JPG, PNG) or PDF file.' },
+        { status: 400 }
+      );
+    }
+
+    console.log(`📤 Uploading ${isPDF ? 'PDF' : 'image'} receipt to Gemini...`);
+    if (isPDF) {
+      console.log('📄 PDF detected - All pages will be processed automatically');
+    }
 
     // Initialize Gemini AI
     const ai = new GoogleGenAI({
@@ -48,9 +62,10 @@ export async function POST(request: NextRequest) {
     console.log('🤖 Analyzing receipt with Gemini AI...');
 
     // Step 2: Create extraction prompt
-    const prompt = `You are an expert receipt data extraction AI. Analyze this receipt image and extract ALL information with careful attention to multi-line items and pricing details.
+    const documentType = isPDF ? 'receipt PDF document (which may contain multiple pages)' : 'receipt image';
+    const prompt = `You are an expert receipt data extraction AI. Analyze this ${documentType} and extract ALL information with careful attention to multi-line items and pricing details.
 
-CRITICAL INSTRUCTIONS:
+${isPDF ? 'IMPORTANT: This is a PDF document. If it contains multiple pages, analyze ALL pages and extract receipt data from each page. Combine items from all pages into a single receipt if they belong to the same transaction, or extract them separately if they are different receipts.\n\n' : ''}CRITICAL INSTRUCTIONS:
 1. Extract ALL items with their details from the receipt
 2. Extract the DATE from the receipt (very important!)
 3. Return ONLY a valid JSON object - no explanations, no markdown code blocks, no extra text
@@ -77,14 +92,14 @@ REQUIRED JSON STRUCTURE:
 }
 
 EXTRACTION RULES:
-- Extract store name from the top of the receipt
+${isPDF ? '- If the PDF has multiple pages, process ALL pages and extract receipt data from each page\n' : ''}- Extract store name from the top of the receipt
 - Extract the DATE from the receipt - look for date/time stamp (usually near top or bottom)
 - Convert any date format to YYYY-MM-DD (e.g., "12/10/2025" → "2025-12-10", "Dec 10, 2025" → "2025-12-10")
 - For each item, get: name, quantity, unit price (if shown), and total price
 - Include units like "kg", "lb", "lbs", "g", "oz", "ea", "pcs" if specified
 - The total should match the receipt's grand total
 - Be precise with all decimal numbers
-- Extract ALL items visible on the receipt
+- Extract ALL items visible on the receipt${isPDF ? ' (including items on all pages if multi-page)' : ''}
 
 MULTI-LINE ITEM DETECTION (VERY IMPORTANT):
 - Some items span multiple lines on receipts. Look for patterns like:
@@ -100,12 +115,24 @@ MULTI-LINE ITEM DETECTION (VERY IMPORTANT):
 - Lines starting with numbers followed by units (lb, kg, oz) often belong to the previous item name
 
 QUANTITY & UNIT PRICE CALCULATION:
-- CRITICAL: If weight/quantity is embedded in the item name (e.g., "Gopi Paneer 226 G", "Shan Ginger Paste 310g"), extract it:
+- CRITICAL: Distinguish between BULK/LOOSE items and PACKAGED items:
+  
+  BULK/LOOSE ITEMS (extract weight/quantity from name):
+  * Items sold by weight/volume where the quantity varies (e.g., "Gopi Paneer 226 G", "Shan Ginger Paste 310g", "Shastha Dosa Batter 64oz")
   * Keep the FULL item name including the weight (e.g., "Gopi Paneer 226 G")
   * Extract the numeric quantity (226, 310, 64, etc.)
   * Extract the unit (g, kg, oz, lb, ml, l, etc.)
   * Calculate unitPrice = totalPrice / quantity (e.g., $4.49 / 226 = $0.0199 per gram)
   * This allows proper price comparison across different package sizes
+  
+  PACKAGED ITEMS (treat as single unit):
+  * Items with brand names and fixed package sizes where you buy 1 package (e.g., "HALDIRAM'S SAMBAR 283GM/10oz", "Britannia 50-50 Sweet&Salty")
+  * The weight in the name is NET WEIGHT (descriptive), not the purchase quantity
+  * quantity: 1 (you're buying 1 package)
+  * unit: null (not sold by weight)
+  * unitPrice: same as totalPrice (price per package)
+  * Keep the full name with weight for reference, but don't extract it as quantity
+  
 - If you see patterns like "0.10 lb @ $2.99/lb", extract:
   * quantity: 0.10
   * unit: "lb"
@@ -148,7 +175,7 @@ Extract as:
   "unit": null
 }
 
-Example 3 - Item with weight/quantity in name:
+Example 3 - Bulk item with weight in name (extract weight as quantity):
 Receipt shows:
   "Gopi Paneer 226 G    $4.49"
 Extract as:
@@ -159,9 +186,22 @@ Extract as:
   "totalPrice": 4.49,
   "unit": "g"
 }
-(Note: unitPrice = 4.49 / 226 = $0.0199 per gram)
+(Note: unitPrice = 4.49 / 226 = $0.0199 per gram. This is a bulk item where weight = purchase quantity)
 
-Example 4 - Another item with weight in name:
+Example 4 - Packaged item with brand name (treat as 1 package):
+Receipt shows:
+  "HALDIRAM'S SAMBAR 283GM/10oz    $3.49"
+Extract as:
+{
+  "name": "HALDIRAM'S SAMBAR 283GM/10oz",
+  "quantity": 1,
+  "unitPrice": 3.49,
+  "totalPrice": 3.49,
+  "unit": null
+}
+(Note: This is a PACKAGED item. The 283GM is NET WEIGHT (descriptive), not purchase quantity. You're buying 1 package. quantity = 1, unit = null)
+
+Example 5 - Another bulk item with weight in name:
 Receipt shows:
   "Shan Ginger Garlic Paste 310g    $3.99"
 Extract as:
@@ -172,9 +212,22 @@ Extract as:
   "totalPrice": 3.99,
   "unit": "g"
 }
-(Note: unitPrice = 3.99 / 310 = $0.0129 per gram)
+(Note: unitPrice = 3.99 / 310 = $0.0129 per gram. This is a bulk item where weight = purchase quantity)
 
-Example 5 - Item with ounces:
+Example 6 - Packaged item with brand (treat as 1 package):
+Receipt shows:
+  "Britannia 50-50 Sweet&Salty 200g    $4.49"
+Extract as:
+{
+  "name": "Britannia 50-50 Sweet&Salty 200g",
+  "quantity": 1,
+  "unitPrice": 4.49,
+  "totalPrice": 4.49,
+  "unit": null
+}
+(Note: Brand name indicates packaged item. The 200g is net weight, not purchase quantity. quantity = 1, unit = null)
+
+Example 7 - Item with ounces (bulk item):
 Receipt shows:
   "Shastha Dosa Batter 64oz    $10.99"
 Extract as:
@@ -185,6 +238,11 @@ Extract as:
   "totalPrice": 10.99,
   "unit": "oz"
 }
+(Note: This is a bulk item where weight = purchase quantity)
+
+RULE OF THUMB:
+- Items with BRAND NAMES (HALDIRAM'S, Britannia, Shan, etc.) = PACKAGED items → quantity = 1, unit = null
+- Generic items or items without brand names = BULK items → extract weight as quantity
 
 OUTPUT: Return ONLY the JSON object, nothing else.`;
 
@@ -278,6 +336,9 @@ OUTPUT: Return ONLY the JSON object, nothing else.`;
 
     console.log(`✅ Receipt processed successfully in ${processingTime}ms`);
     console.log(`📊 Extracted ${extractedData.items.length} items`);
+    if (isPDF) {
+      console.log(`📄 PDF document processed - all pages analyzed`);
+    }
 
     return NextResponse.json({ 
       data: extractedData,
