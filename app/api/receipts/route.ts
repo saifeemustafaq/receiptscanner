@@ -3,9 +3,6 @@ import { getAllReceipts, saveReceipt, updateReceipt, deleteReceipt, exportReceip
 
 export const runtime = 'nodejs';
 
-/**
- * GET /api/receipts - Get all receipts
- */
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -13,8 +10,8 @@ export async function GET(request: NextRequest) {
 
     if (action === 'export') {
       const format = searchParams.get('format') as 'json' | 'csv' || 'json';
-      const data = exportReceipts(format);
-      
+      const data = await exportReceipts(format);
+
       return new NextResponse(data, {
         headers: {
           'Content-Type': format === 'json' ? 'application/json' : 'text/csv',
@@ -23,7 +20,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const receipts = getAllReceipts();
+    const receipts = await getAllReceipts();
     return NextResponse.json({ success: true, receipts });
   } catch (error) {
     console.error('Error fetching receipts:', error);
@@ -34,14 +31,10 @@ export async function GET(request: NextRequest) {
   }
 }
 
-/**
- * POST /api/receipts - Save a new receipt
- */
 export async function POST(request: NextRequest) {
   try {
     const receipt = await request.json();
-    
-    // Validate required fields
+
     if (!receipt.id || !receipt.extractedData || !receipt.storeNameSelected) {
       return NextResponse.json(
         { success: false, error: 'Missing required fields' },
@@ -49,8 +42,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const success = saveReceipt(receipt);
-    
+    const success = await saveReceipt(receipt);
+
     if (success) {
       return NextResponse.json({ success: true, message: 'Receipt saved successfully' });
     } else {
@@ -68,13 +61,10 @@ export async function POST(request: NextRequest) {
   }
 }
 
-/**
- * PATCH /api/receipts - Update an existing receipt
- */
 export async function PATCH(request: NextRequest) {
   try {
     const { id, updates } = await request.json();
-    
+
     if (!id) {
       return NextResponse.json(
         { success: false, error: 'Receipt ID is required' },
@@ -82,8 +72,8 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    const success = updateReceipt(id, updates);
-    
+    const success = await updateReceipt(id, updates);
+
     if (success) {
       return NextResponse.json({ success: true, message: 'Receipt updated successfully' });
     } else {
@@ -101,14 +91,11 @@ export async function PATCH(request: NextRequest) {
   }
 }
 
-/**
- * DELETE /api/receipts - Delete a receipt
- */
 export async function DELETE(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-    
+
     if (!id) {
       return NextResponse.json(
         { success: false, error: 'Receipt ID is required' },
@@ -116,8 +103,8 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const success = deleteReceipt(id);
-    
+    const success = await deleteReceipt(id);
+
     if (success) {
       return NextResponse.json({ success: true, message: 'Receipt deleted successfully' });
     } else {
@@ -134,4 +121,3 @@ export async function DELETE(request: NextRequest) {
     );
   }
 }
-

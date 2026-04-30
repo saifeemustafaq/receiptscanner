@@ -1,9 +1,11 @@
 'use client';
 
+import { toast } from 'sonner';
 import ReceiptHistory from '../components/ReceiptHistory';
 import { useReceipts } from '@/lib/hooks/useReceipts';
 import { useStores } from '@/lib/hooks/useStores';
 import { useUnits } from '@/lib/hooks/useUnits';
+import { SavedReceipt } from '@/lib/types';
 
 export default function HistoryPage() {
   const { receipts, loading, deleteReceipt, updateReceipt, exportReceipts } = useReceipts();
@@ -13,21 +15,21 @@ export default function HistoryPage() {
   const handleDelete = async (id: string) => {
     const result = await deleteReceipt(id);
     if (!result.success) {
-      alert('Failed to delete receipt: ' + result.error);
+      toast.error('Failed to delete receipt: ' + result.error);
     }
   };
 
-  const handleUpdate = async (id: string, updates: any) => {
+  const handleUpdate = async (id: string, updates: Partial<SavedReceipt>) => {
     const result = await updateReceipt(id, updates);
     if (!result.success) {
-      alert('Failed to update receipt: ' + result.error);
+      toast.error('Failed to update receipt: ' + result.error);
     }
   };
 
   const handleExport = async () => {
     const result = await exportReceipts();
     if (!result.success) {
-      alert(result.error || 'Failed to export receipts');
+      toast.error(result.error || 'Failed to export receipts');
     }
   };
 

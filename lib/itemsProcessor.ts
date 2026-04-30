@@ -1,4 +1,5 @@
 import { SavedReceipt } from './types';
+import { PRICE_TOLERANCE } from './constants';
 
 export interface ItemPriceEntry {
   store: string;
@@ -113,7 +114,7 @@ function applyPriceVariationRules(entries: ItemPriceEntry[]): ItemPriceEntry[] {
     }
 
     // CASE 3: Same store - only add if price changed
-    const priceChanged = Math.abs(entry.price - lastFromSameStore.price) > 0.01; // Tolerance for floating point
+    const priceChanged = Math.abs(entry.price - lastFromSameStore.price) > PRICE_TOLERANCE;
     
     if (priceChanged) {
       result.push(entry);

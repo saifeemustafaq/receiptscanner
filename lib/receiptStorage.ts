@@ -1,56 +1,17 @@
-import fs from 'fs';
-import path from 'path';
+import { connectDB } from './db/mongoose';
+import { Receipt } from './db/models/Receipt';
+import { SavedReceipt } from './types';
 
-/**
- * Get receipts data directory
- */
-export function getReceiptsDataDir(): string {
-  return path.join(process.cwd(), 'data', 'receipts');
+export async function getAllReceipts(): Promise<SavedReceipt[]> {
+  await connectDB();
+  const docs = await Receipt.find({}).lean();
+  return docs.map(({ _id, __v, ...rest }) => rest as SavedReceipt);
 }
 
-/**
- * Ensure data directory exists
- */
-export function ensureDataDirExists(): void {
-  const dir = getReceiptsDataDir();
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-}
-
-/**
- * Get all receipts from JSON file
- */
-export function getAllReceipts(): any[] {
-  ensureDataDirExists();
-  const filePath = path.join(getReceiptsDataDir(), 'receipts_data.json');
-  
-  if (!fs.existsSync(filePath)) {
-    return [];
-  }
-  
+export async function saveReceipt(receipt: SavedReceipt): Promise<boolean> {
+  await connectDB();
   try {
-    const fileContent = fs.readFileSync(filePath, 'utf-8');
-    return JSON.parse(fileContent);
-  } catch (error) {
-    console.error('Error reading receipts data:', error);
-    return [];
-  }
-}
-
-/**
- * Save a new receipt
- */
-export function saveReceipt(receipt: any): boolean {
-  ensureDataDirExists();
-  const filePath = path.join(getReceiptsDataDir(), 'receipts_data.json');
-  
-  try {
-    const allReceipts = getAllReceipts();
-    allReceipts.push(receipt);
-    
-    fs.writeFileSync(filePath, JSON.stringify(allReceipts, null, 2), 'utf-8');
-    console.log(`✅ Saved receipt ID: ${receipt.id}`);
+    await Receipt.create(receipt);
     return true;
   } catch (error) {
     console.error('Error saving receipt:', error);
@@ -58,27 +19,14 @@ export function saveReceipt(receipt: any): boolean {
   }
 }
 
-/**
- * Update an existing receipt
- */
-export function updateReceipt(receiptId: string, updates: any): boolean {
-  ensureDataDirExists();
-  const filePath = path.join(getReceiptsDataDir(), 'receipts_data.json');
-  
+export async function updateReceipt(receiptId: string, updates: Partial<SavedReceipt>): Promise<boolean> {
+  await connectDB();
   try {
-    const allReceipts = getAllReceipts();
-    const index = allReceipts.findIndex((r: any) => r.id === receiptId);
-    
-    if (index === -1) {
+    const result = await Receipt.findOneAndUpdate({ id: receiptId }, { $set: updates });
+    if (!result) {
       console.error(`Receipt not found: ${receiptId}`);
       return false;
     }
-    
-    // Merge updates with existing receipt
-    allReceipts[index] = { ...allReceipts[index], ...updates };
-    
-    fs.writeFileSync(filePath, JSON.stringify(allReceipts, null, 2), 'utf-8');
-    console.log(`✅ Updated receipt ID: ${receiptId}`);
     return true;
   } catch (error) {
     console.error('Error updating receipt:', error);
@@ -86,24 +34,14 @@ export function updateReceipt(receiptId: string, updates: any): boolean {
   }
 }
 
-/**
- * Delete a receipt
- */
-export function deleteReceipt(receiptId: string): boolean {
-  ensureDataDirExists();
-  const filePath = path.join(getReceiptsDataDir(), 'receipts_data.json');
-  
+export async function deleteReceipt(receiptId: string): Promise<boolean> {
+  await connectDB();
   try {
-    const allReceipts = getAllReceipts();
-    const filtered = allReceipts.filter((r: any) => r.id !== receiptId);
-    
-    if (filtered.length === allReceipts.length) {
+    const result = await Receipt.deleteOne({ id: receiptId });
+    if (result.deletedCount === 0) {
       console.error(`Receipt not found: ${receiptId}`);
       return false;
     }
-    
-    fs.writeFileSync(filePath, JSON.stringify(filtered, null, 2), 'utf-8');
-    console.log(`✅ Deleted receipt ID: ${receiptId}`);
     return true;
   } catch (error) {
     console.error('Error deleting receipt:', error);
@@ -111,29 +49,24 @@ export function deleteReceipt(receiptId: string): boolean {
   }
 }
 
-/**
- * Export receipts to a file
- */
-export function exportReceipts(format: 'json' | 'csv' = 'json'): string {
-  const allReceipts = getAllReceipts();
-  
+export async function exportReceipts(format: 'json' | 'csv' = 'json'): Promise<string> {
+  const allReceipts = await getAllReceipts();
+
   if (format === 'json') {
     return JSON.stringify(allReceipts, null, 2);
   }
-  
-  // CSV format (basic implementation)
+
   if (allReceipts.length === 0) return '';
-  
+
   const headers = ['ID', 'Store', 'Billing Date', 'Upload Date', 'Total', 'Items Count'];
-  const rows = allReceipts.map((r: any) => [
+  const rows = allReceipts.map((r) => [
     r.id,
     r.storeNameSelected,
     r.billingDate,
     r.uploadDate,
     r.extractedData.total,
-    r.extractedData.items.length
+    r.extractedData.items.length,
   ]);
-  
+
   return [headers, ...rows].map(row => row.join(',')).join('\n');
 }
-

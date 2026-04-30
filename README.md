@@ -11,7 +11,7 @@ A mobile-first web application for scanning and processing receipts using Google
 - 📅 **Date Tracking** - Record purchase dates
 - 📊 **Receipt History** - View all saved receipts with search
 - ⚙️ **Settings** - Manage stores and application data
-- 💾 **Local Storage** - Data saved in browser
+- 💾 **Server Storage** - Data saved in JSON files on the server
 - 📥 **Export** - Download receipts as JSON
 
 ## Setup
@@ -42,6 +42,6 @@ npm run dev
 - Next.js 16 (App Router)
 - React 19
 - TypeScript
-- Google Generative AI (Gemini 1.5 Flash)
+- Google Generative AI (Gemini 2.0 Flash)
 - Lucide React (Icons)
 - CSS Variables (Centralized styling)

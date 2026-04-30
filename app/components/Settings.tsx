@@ -217,13 +217,13 @@ export default function Settings({ stores, onAddStore, onDeleteStore, units, onA
           
           <div className="flex flex-col gap-base">
             <p style={{ color: 'var(--black-secondary)', fontSize: '14px' }}>
-              All data is stored locally in your browser's localStorage
+              All data is stored in JSON files on the server under the data/ directory
             </p>
 
             <div style={{
               padding: '16px',
-              backgroundColor: '#fff3cd',
-              border: '2px solid #ffc107',
+              backgroundColor: 'var(--warning-bg)',
+              border: '2px solid var(--warning-border)',
               borderRadius: '4px'
             }}>
               <p style={{ fontSize: '14px', fontWeight: 600, marginBottom: '4px' }}>
@@ -246,8 +246,8 @@ export default function Settings({ stores, onAddStore, onDeleteStore, units, onA
           <h2 className="card-title">About</h2>
           <div className="flex flex-col gap-sm" style={{ fontSize: '14px' }}>
             <p><strong>Version:</strong> 1.0.0</p>
-            <p><strong>Storage:</strong> Browser localStorage</p>
-            <p><strong>AI Model:</strong> Google Gemini 1.5 Flash</p>
+            <p><strong>Storage:</strong> Server-side JSON files</p>
+            <p><strong>AI Model:</strong> OpenAI GPT-4o Mini</p>
           </div>
         </Card>
       </div>

@@ -1,5 +1,7 @@
 import { SavedReceipt } from './types';
 import { processItemsFromReceipts, ProcessedItem } from './itemsProcessor';
+import { TREND_THRESHOLD_PERCENT, CHART_COLORS, STORE_BRAND_COLORS } from './constants';
+import { formatReceiptDate } from './formatting';
 
 export interface ChartDataPoint {
   date: string;
@@ -20,15 +22,7 @@ export interface PriceStatistics {
   trend: 'up' | 'down' | 'stable';
 }
 
-/**
- * Get all unique item names sorted alphabetically
- */
-export function getItemNamesForAnalytics(receipts: SavedReceipt[]): string[] {
-  const items = processItemsFromReceipts(receipts);
-  return items.map(item => item.name).sort((a, b) => 
-    a.toLowerCase().localeCompare(b.toLowerCase())
-  );
-}
+export { getAllItemNames as getItemNamesForAnalytics } from './itemsProcessor';
 
 /**
  * Transform item price history into chart-ready format
@@ -66,11 +60,7 @@ export function prepareChartData(
   
   dateMap.forEach((storeMap, date) => {
     const dataPoint: ChartDataPoint = {
-      date: new Date(date + 'T00:00:00').toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        timeZone: 'America/Los_Angeles'
-      }),
+      date: formatReceiptDate(date, 'short'),
       dateObj: new Date(date + 'T00:00:00'),
     };
 
@@ -120,7 +110,7 @@ export function calculateStatistics(
   const priceChange = ((lastPrice - firstPrice) / firstPrice) * 100;
 
   let trend: 'up' | 'down' | 'stable' = 'stable';
-  if (Math.abs(priceChange) > 5) {
+  if (Math.abs(priceChange) > TREND_THRESHOLD_PERCENT) {
     trend = priceChange > 0 ? 'up' : 'down';
   }
 
@@ -153,25 +143,10 @@ export function getUniqueStores(receipts: SavedReceipt[]): string[] {
  * Get color for a store (consistent colors)
  */
 export function getStoreColor(store: string, index: number): string {
-  const colors = [
-    '#D4AF37', // Golden
-    '#2E7D32', // Green
-    '#1976D2', // Blue
-    '#D32F2F', // Red
-    '#7B1FA2', // Purple
-    '#F57C00', // Orange
-    '#0097A7', // Cyan
-    '#C2185B', // Pink
-  ];
-  
-  // Try to match known stores
   const storeLower = store.toLowerCase();
-  if (storeLower.includes('walmart')) return '#0071CE';
-  if (storeLower.includes('target')) return '#CC0000';
-  if (storeLower.includes('costco')) return '#0066B2';
-  if (storeLower.includes('whole foods')) return '#00A652';
-  if (storeLower.includes('kroger')) return '#E32D1C';
-  
-  return colors[index % colors.length];
+  for (const [key, color] of Object.entries(STORE_BRAND_COLORS)) {
+    if (storeLower.includes(key)) return color;
+  }
+  return CHART_COLORS[index % CHART_COLORS.length];
 }
 

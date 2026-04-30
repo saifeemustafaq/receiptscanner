@@ -12,6 +12,9 @@ export function useReceipts() {
     try {
       setLoading(true);
       const response = await fetch('/api/receipts');
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
       const data = await response.json();
       if (data.success) {
         setReceipts(data.receipts);
@@ -30,11 +33,36 @@ export function useReceipts() {
     loadReceipts();
   }, []);
 
+  const saveReceipt = async (receipt: SavedReceipt) => {
+    try {
+      const response = await fetch('/api/receipts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(receipt),
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      const result = await response.json();
+      if (result.success) {
+        await loadReceipts();
+        return { success: true };
+      } else {
+        return { success: false, error: result.error };
+      }
+    } catch (error) {
+      console.error('Error saving receipt:', error);
+      return { success: false, error: 'Failed to save receipt' };
+    }
+  };
+
   const deleteReceipt = async (id: string) => {
     try {
       const response = await fetch(`/api/receipts?id=${id}`, {
         method: 'DELETE',
       });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
 
       const result = await response.json();
 
@@ -50,13 +78,17 @@ export function useReceipts() {
     }
   };
 
-  const updateReceipt = async (id: string, updates: any) => {
+  const updateReceipt = async (id: string, updates: Partial<SavedReceipt>) => {
     try {
       const response = await fetch('/api/receipts', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, updates }),
       });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
 
       const result = await response.json();
 
@@ -79,6 +111,7 @@ export function useReceipts() {
 
     try {
       const response = await fetch('/api/receipts?action=export&format=json');
+      if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -98,6 +131,7 @@ export function useReceipts() {
     loading,
     error,
     loadReceipts,
+    saveReceipt,
     deleteReceipt,
     updateReceipt,
     exportReceipts,

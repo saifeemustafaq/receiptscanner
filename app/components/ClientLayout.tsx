@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Menu } from 'lucide-react';
+import { Toaster } from 'sonner';
 import Sidebar from './Sidebar';
 
 export default function ClientLayout({
@@ -33,6 +34,7 @@ export default function ClientLayout({
           {children}
         </div>
       </main>
+      <Toaster position="bottom-right" richColors />
     </div>
   );
 }

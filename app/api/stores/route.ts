@@ -3,12 +3,9 @@ import { getAllStores, addStore, deleteStore, saveAllStores } from '@/lib/stores
 
 export const runtime = 'nodejs';
 
-/**
- * GET /api/stores - Get all stores
- */
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    const stores = getAllStores();
+    const stores = await getAllStores();
     return NextResponse.json({ success: true, stores });
   } catch (error) {
     console.error('Error fetching stores:', error);
@@ -19,13 +16,10 @@ export async function GET(request: NextRequest) {
   }
 }
 
-/**
- * POST /api/stores - Add a new store
- */
 export async function POST(request: NextRequest) {
   try {
     const { store } = await request.json();
-    
+
     if (!store || typeof store !== 'string' || !store.trim()) {
       return NextResponse.json(
         { success: false, error: 'Store name is required' },
@@ -33,10 +27,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const success = addStore(store);
-    
+    const success = await addStore(store);
+
     if (success) {
-      const stores = getAllStores();
+      const stores = await getAllStores();
       return NextResponse.json({ success: true, stores, message: 'Store added successfully' });
     } else {
       return NextResponse.json(
@@ -53,14 +47,11 @@ export async function POST(request: NextRequest) {
   }
 }
 
-/**
- * DELETE /api/stores - Delete a store
- */
 export async function DELETE(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const store = searchParams.get('store');
-    
+
     if (!store) {
       return NextResponse.json(
         { success: false, error: 'Store name is required' },
@@ -68,10 +59,10 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const success = deleteStore(store);
-    
+    const success = await deleteStore(store);
+
     if (success) {
-      const stores = getAllStores();
+      const stores = await getAllStores();
       return NextResponse.json({ success: true, stores, message: 'Store deleted successfully' });
     } else {
       return NextResponse.json(
@@ -88,13 +79,10 @@ export async function DELETE(request: NextRequest) {
   }
 }
 
-/**
- * PUT /api/stores - Update all stores (for bulk operations)
- */
 export async function PUT(request: NextRequest) {
   try {
     const { stores } = await request.json();
-    
+
     if (!Array.isArray(stores)) {
       return NextResponse.json(
         { success: false, error: 'Stores must be an array' },
@@ -102,10 +90,10 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const success = saveAllStores(stores);
-    
+    const success = await saveAllStores(stores);
+
     if (success) {
-      const updatedStores = getAllStores();
+      const updatedStores = await getAllStores();
       return NextResponse.json({ success: true, stores: updatedStores, message: 'Stores updated successfully' });
     } else {
       return NextResponse.json(
@@ -121,4 +109,3 @@ export async function PUT(request: NextRequest) {
     );
   }
 }
-

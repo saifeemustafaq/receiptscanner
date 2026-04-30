@@ -1,5 +1,6 @@
 'use client';
 
+import { toast } from 'sonner';
 import Settings from '../components/Settings';
 import { useStores } from '@/lib/hooks/useStores';
 import { useUnits } from '@/lib/hooks/useUnits';
@@ -11,7 +12,7 @@ export default function SettingsPage() {
   const handleClearAll = () => {
     clearStores();
     clearUnits();
-    alert('All settings cleared');
+    toast.success('All settings cleared');
   };
 
   return (

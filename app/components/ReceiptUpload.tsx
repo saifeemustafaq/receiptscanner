@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Camera, Upload, X, CheckCircle, Loader, AlertCircle, Clock, FileText } from 'lucide-react';
+import { toast } from 'sonner';
 import Button from './Button';
 import Card from './Card';
 
@@ -35,13 +36,13 @@ export default function ReceiptUpload({ onReceiptSelect, selectedFile, queueInfo
       );
       
       if (validFiles.length === 0) {
-        alert('Please select valid image files (JPG, PNG) or PDF files');
+        toast.error('Please select valid image files (JPG, PNG) or PDF files');
         return;
       }
 
       // Enforce 5-receipt limit
       if (validFiles.length > 5) {
-        alert('You can upload a maximum of 5 receipts at once. Please select up to 5 files.');
+        toast.error('You can upload a maximum of 5 receipts at once. Please select up to 5 files.');
         return;
       }
 
@@ -123,7 +124,7 @@ export default function ReceiptUpload({ onReceiptSelect, selectedFile, queueInfo
             <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
               {queueInfo.statuses?.map((status, index) => (
                 <div
-                  key={index}
+                  key={`${status}-${index}`}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -284,12 +285,6 @@ export default function ReceiptUpload({ onReceiptSelect, selectedFile, queueInfo
         </div>
       )}
       
-      <style jsx>{`
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
     </Card>
   );
 }

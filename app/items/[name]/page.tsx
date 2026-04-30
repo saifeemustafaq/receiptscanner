@@ -1,11 +1,13 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import ItemDetail from '../../components/ItemDetail';
 import { getItemByName } from '@/lib/itemsProcessor';
 import { useReceipts } from '@/lib/hooks/useReceipts';
 import { useStores } from '@/lib/hooks/useStores';
 import { useUnits } from '@/lib/hooks/useUnits';
+import { SavedReceipt } from '@/lib/types';
 
 export default function ItemDetailPage() {
   const params = useParams();
@@ -51,24 +53,15 @@ export default function ItemDetailPage() {
       for (const receipt of updatedReceipts) {
         const originalReceipt = receipts.find(r => r.id === receipt.id);
         if (originalReceipt && JSON.stringify(originalReceipt) !== JSON.stringify(receipt)) {
-          await fetch('/api/receipts', {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-              id: receipt.id, 
-              updates: { extractedData: receipt.extractedData } 
-            }),
-          });
+          await updateReceipt(receipt.id, { extractedData: receipt.extractedData });
         }
       }
-
-      await loadReceipts();
 
       // Navigate to the new item name
       const encodedNewName = encodeURIComponent(newName);
       router.push(`/items/${encodedNewName}`);
 
-      alert(`Item renamed successfully! ${oldName} → ${newName}`);
+      toast.success(`Item renamed: ${oldName} → ${newName}`);
     } catch (error) {
       console.error('Error renaming item:', error);
       throw error;
@@ -97,10 +90,10 @@ export default function ItemDetailPage() {
     );
   }
 
-  const handleReceiptUpdate = async (id: string, updates: any) => {
+  const handleReceiptUpdate = async (id: string, updates: Partial<SavedReceipt>) => {
     const result = await updateReceipt(id, updates);
     if (!result.success) {
-      alert('Failed to update receipt: ' + result.error);
+      toast.error('Failed to update receipt: ' + result.error);
       throw new Error(result.error || 'Failed to update receipt');
     }
   };
@@ -108,7 +101,7 @@ export default function ItemDetailPage() {
   const handleReceiptDelete = async (id: string) => {
     const result = await deleteReceipt(id);
     if (!result.success) {
-      alert('Failed to delete receipt: ' + result.error);
+      toast.error('Failed to delete receipt: ' + result.error);
       throw new Error(result.error || 'Failed to delete receipt');
     }
   };

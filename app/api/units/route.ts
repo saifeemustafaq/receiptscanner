@@ -4,22 +4,18 @@ import { getAllReceipts } from '@/lib/receiptStorage';
 
 export const runtime = 'nodejs';
 
-/**
- * GET /api/units - Get all units
- */
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const action = searchParams.get('action');
 
     if (action === 'discover') {
-      // Discover units from receipts
-      const receipts = getAllReceipts();
-      const units = discoverUnitsFromReceipts(receipts);
+      const receipts = await getAllReceipts();
+      const units = await discoverUnitsFromReceipts(receipts);
       return NextResponse.json({ success: true, units });
     }
 
-    const units = getAllUnits();
+    const units = await getAllUnits();
     return NextResponse.json({ success: true, units });
   } catch (error) {
     console.error('Error fetching units:', error);
@@ -30,13 +26,10 @@ export async function GET(request: NextRequest) {
   }
 }
 
-/**
- * POST /api/units - Add a new unit
- */
 export async function POST(request: NextRequest) {
   try {
     const { unit } = await request.json();
-    
+
     if (!unit || typeof unit !== 'string' || !unit.trim()) {
       return NextResponse.json(
         { success: false, error: 'Unit is required' },
@@ -44,10 +37,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const success = addUnit(unit);
-    
+    const success = await addUnit(unit);
+
     if (success) {
-      const units = getAllUnits();
+      const units = await getAllUnits();
       return NextResponse.json({ success: true, units, message: 'Unit added successfully' });
     } else {
       return NextResponse.json(
@@ -64,14 +57,11 @@ export async function POST(request: NextRequest) {
   }
 }
 
-/**
- * DELETE /api/units - Delete a unit
- */
 export async function DELETE(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const unit = searchParams.get('unit');
-    
+
     if (!unit) {
       return NextResponse.json(
         { success: false, error: 'Unit is required' },
@@ -79,10 +69,10 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const success = deleteUnit(unit);
-    
+    const success = await deleteUnit(unit);
+
     if (success) {
-      const units = getAllUnits();
+      const units = await getAllUnits();
       return NextResponse.json({ success: true, units, message: 'Unit deleted successfully' });
     } else {
       return NextResponse.json(
@@ -99,13 +89,10 @@ export async function DELETE(request: NextRequest) {
   }
 }
 
-/**
- * PUT /api/units - Update all units (for bulk operations)
- */
 export async function PUT(request: NextRequest) {
   try {
     const { units } = await request.json();
-    
+
     if (!Array.isArray(units)) {
       return NextResponse.json(
         { success: false, error: 'Units must be an array' },
@@ -113,10 +100,10 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const success = saveAllUnits(units);
-    
+    const success = await saveAllUnits(units);
+
     if (success) {
-      const updatedUnits = getAllUnits();
+      const updatedUnits = await getAllUnits();
       return NextResponse.json({ success: true, units: updatedUnits, message: 'Units updated successfully' });
     } else {
       return NextResponse.json(
@@ -132,4 +119,3 @@ export async function PUT(request: NextRequest) {
     );
   }
 }
-

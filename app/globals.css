@@ -28,6 +28,17 @@
   /* Colors - Accent */
   --error-text: #8B3A3A;
   --error-bg: #C84B4B;
+  --error-bg-light: #ffebee;
+
+  /* Colors - Warning */
+  --warning-bg: #fff3cd;
+  --warning-border: #ffc107;
+
+  /* Colors - Trend */
+  --trend-up: #2B5F8F;
+
+  /* Colors - Text */
+  --text-muted: #666666;
   
   /* Spacing */
   --space-xs: 0.25rem;
@@ -316,6 +327,15 @@ input, select, textarea {
 .gap-lg { gap: var(--space-lg); }
 .gap-xl { gap: var(--space-xl); }
 
+/* Responsive visibility */
+.hidden-mobile { display: revert; }
+.hidden-desktop { display: none; }
+
+@media (max-width: 640px) {
+  .hidden-mobile { display: none !important; }
+  .hidden-desktop { display: revert !important; }
+}
+
 /* Mobile Sidebar */
 @media (max-width: 768px) {
   .sidebar {
@@ -359,4 +379,10 @@ input, select, textarea {
   .mobile-menu-btn {
     display: block;
   }
+}
+
+/* Shared animations */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }

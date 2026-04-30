@@ -1,65 +1,25 @@
-import fs from 'fs';
-import path from 'path';
+import { connectDB } from './db/mongoose';
+import { Store } from './db/models/Store';
+import { DEFAULT_STORES } from './constants';
 
-const DEFAULT_STORES = ['Walmart', 'Target', 'Costco', 'Whole Foods', 'Kroger'];
-
-/**
- * Get stores data directory
- */
-export function getStoresDataDir(): string {
-  return path.join(process.cwd(), 'data', 'stores');
+export async function getAllStores(): Promise<string[]> {
+  await connectDB();
+  const docs = await Store.find({}).lean();
+  if (docs.length === 0) {
+    await saveAllStores(DEFAULT_STORES);
+    return DEFAULT_STORES.slice().sort();
+  }
+  return docs.map(d => d.name).sort();
 }
 
-/**
- * Ensure data directory exists
- */
-export function ensureStoresDataDirExists(): void {
-  const dir = getStoresDataDir();
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-}
-
-/**
- * Get all stores from JSON file
- */
-export function getAllStores(): string[] {
-  ensureStoresDataDirExists();
-  const filePath = path.join(getStoresDataDir(), 'stores_data.json');
-  
-  if (!fs.existsSync(filePath)) {
-    // If file doesn't exist, initialize with default stores
-    const defaultStores = DEFAULT_STORES;
-    saveAllStores(defaultStores);
-    return defaultStores;
-  }
-  
+export async function saveAllStores(stores: string[]): Promise<boolean> {
+  await connectDB();
   try {
-    const fileContent = fs.readFileSync(filePath, 'utf-8');
-    const stores = JSON.parse(fileContent);
-    // Ensure it's an array
-    if (Array.isArray(stores)) {
-      return stores;
+    const unique = Array.from(new Set(stores.map(s => s.trim()))).filter(Boolean);
+    await Store.deleteMany({});
+    if (unique.length > 0) {
+      await Store.insertMany(unique.map(name => ({ name })));
     }
-    return DEFAULT_STORES;
-  } catch (error) {
-    console.error('Error reading stores data:', error);
-    return DEFAULT_STORES;
-  }
-}
-
-/**
- * Save all stores to JSON file
- */
-export function saveAllStores(stores: string[]): boolean {
-  ensureStoresDataDirExists();
-  const filePath = path.join(getStoresDataDir(), 'stores_data.json');
-  
-  try {
-    // Ensure stores are unique and filter out empty strings
-    const uniqueStores = Array.from(new Set(stores.map(s => s.trim()))).filter(s => s !== '').sort();
-    fs.writeFileSync(filePath, JSON.stringify(uniqueStores, null, 2), 'utf-8');
-    console.log(`✅ Saved ${uniqueStores.length} stores`);
     return true;
   } catch (error) {
     console.error('Error saving stores:', error);
@@ -67,39 +27,28 @@ export function saveAllStores(stores: string[]): boolean {
   }
 }
 
-/**
- * Add a new store
- */
-export function addStore(storeName: string): boolean {
+export async function addStore(storeName: string): Promise<boolean> {
   const trimmed = storeName.trim();
-  if (!trimmed) {
+  if (!trimmed) return false;
+  await connectDB();
+  try {
+    const existing = await Store.findOne({ name: new RegExp(`^${trimmed}$`, 'i') });
+    if (existing) return false;
+    await Store.create({ name: trimmed });
+    return true;
+  } catch (error) {
+    console.error('Error adding store:', error);
     return false;
   }
-  
-  const allStores = getAllStores();
-  
-  // Check case-insensitive for duplicates
-  const lowerCased = trimmed.toLowerCase();
-  if (allStores.some(s => s.toLowerCase() === lowerCased)) {
-    return false; // Already exists
-  }
-  
-  const newStores = [...allStores, trimmed].sort();
-  return saveAllStores(newStores);
 }
 
-/**
- * Delete a store
- */
-export function deleteStore(storeName: string): boolean {
-  const allStores = getAllStores();
-  // Case-insensitive deletion
-  const filtered = allStores.filter(s => s.toLowerCase() !== storeName.toLowerCase());
-  
-  if (filtered.length === allStores.length) {
-    return false; // Store not found
+export async function deleteStore(storeName: string): Promise<boolean> {
+  await connectDB();
+  try {
+    const result = await Store.deleteOne({ name: new RegExp(`^${storeName}$`, 'i') });
+    return result.deletedCount > 0;
+  } catch (error) {
+    console.error('Error deleting store:', error);
+    return false;
   }
-  
-  return saveAllStores(filtered);
 }
-

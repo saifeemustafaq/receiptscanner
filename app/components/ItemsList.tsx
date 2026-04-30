@@ -4,6 +4,7 @@ import React, { useState, useMemo } from 'react';
 import { Search, ShoppingBag, ChevronRight } from 'lucide-react';
 import Card from './Card';
 import { ProcessedItem } from '@/lib/itemsProcessor';
+import { formatPrice, formatReceiptDate } from '@/lib/formatting';
 
 interface ItemsListProps {
   items: ProcessedItem[];
@@ -20,11 +21,6 @@ export default function ItemsList({ items, onItemClick }: ItemsListProps) {
       item.normalizedName.includes(search)
     );
   }, [items, searchTerm]);
-
-  const formatPrice = (price: number, unit: string | null) => {
-    const priceStr = `$${price.toFixed(2)}`;
-    return unit ? `${priceStr}/${unit}` : priceStr;
-  };
 
   const getPriceRange = (item: ProcessedItem) => {
     const prices = item.priceHistory.map(entry => entry.price);
@@ -138,7 +134,7 @@ export default function ItemsList({ items, onItemClick }: ItemsListProps) {
                           <p style={{ 
                             fontSize: '28px', 
                             fontWeight: 700,
-                            color: '#2B5F8F',
+                            color: 'var(--trend-up)',
                           }}>
                             {formatPrice(maxPrice, item.latestUnit)}
                           </p>
@@ -158,7 +154,7 @@ export default function ItemsList({ items, onItemClick }: ItemsListProps) {
                             <p style={{ 
                               fontSize: '20px', 
                               fontWeight: 700,
-                              color: '#2D5016',
+                              color: 'var(--green-main)',
                             }}>
                               {formatPrice(minPrice, item.latestUnit)}
                             </p>
@@ -181,7 +177,7 @@ export default function ItemsList({ items, onItemClick }: ItemsListProps) {
                             <p style={{ 
                               fontSize: '20px', 
                               fontWeight: 700,
-                              color: '#8B3A3A',
+                              color: 'var(--error-text)',
                             }}>
                               {formatPrice(maxPrice, item.latestUnit)}
                             </p>
@@ -200,11 +196,7 @@ export default function ItemsList({ items, onItemClick }: ItemsListProps) {
                         <strong>{item.latestStore}</strong>
                       </span>
                       <span>
-                        {new Date(item.latestDate + 'T00:00:00').toLocaleDateString('en-US', {
-                          timeZone: 'America/Los_Angeles',
-                          month: 'short',
-                          day: 'numeric'
-                        })}
+                        {formatReceiptDate(item.latestDate, 'short')}
                       </span>
                     </div>
 
