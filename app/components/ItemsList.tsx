@@ -134,7 +134,7 @@ export default function ItemsList({ items, onItemClick }: ItemsListProps) {
                           <p style={{ 
                             fontSize: '28px', 
                             fontWeight: 700,
-                            color: 'var(--trend-up)',
+                            color: 'var(--black-text)',
                           }}>
                             {formatPrice(maxPrice, item.latestUnit)}
                           </p>

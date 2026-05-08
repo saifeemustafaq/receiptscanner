@@ -15,7 +15,7 @@ export default function InsightsPriceChart({ chartData, chartStores }: InsightsP
     <Card>
       <h2 className="card-title" style={{ marginBottom: '24px' }}>Price History</h2>
       <ResponsiveContainer width="100%" height={300}>
-        <LineChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
+        <LineChart data={chartData} margin={{ top: 5, right: 5, left: 10, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--ivory-border)" />
           <XAxis
             dataKey="date"
@@ -37,7 +37,7 @@ export default function InsightsPriceChart({ chartData, chartStores }: InsightsP
               borderRadius: '4px',
               fontSize: '14px',
             }}
-            formatter={(value: number) => [`$${Number(value).toFixed(2)}`, '']}
+            formatter={(value: number, name: string) => [`$${Number(value).toFixed(2)}`, name]}
             labelStyle={{ fontWeight: 600, marginBottom: '4px' }}
           />
           <Legend wrapperStyle={{ fontSize: '14px', paddingTop: '20px' }} iconType="line" />

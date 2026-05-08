@@ -4,17 +4,20 @@ import React from 'react';
 import { TrendingUp, TrendingDown, Minus, DollarSign } from 'lucide-react';
 import Card from './Card';
 import { PriceStatistics } from '@/lib/analyticsUtils';
+import { formatReceiptDate } from '@/lib/formatting';
 
 interface InsightsStatsCardsProps {
   stats: PriceStatistics;
 }
 
 export default function InsightsStatsCards({ stats }: InsightsStatsCardsProps) {
+  const trendSameDay = stats.trendFromDate === stats.trendToDate;
+
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '16px' }}>
       <Card>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-          <div style={{ padding: '8px', backgroundColor: 'var(--green-pale)', borderRadius: '4px' }}>
+          <div style={{ padding: '8px', backgroundColor: 'var(--green-pale)', borderRadius: '4px', flexShrink: 0 }}>
             <TrendingDown size={20} style={{ color: 'var(--green-main)' }} />
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
@@ -27,13 +30,16 @@ export default function InsightsStatsCards({ stats }: InsightsStatsCardsProps) {
             <p style={{ fontSize: '12px', color: 'var(--black-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {stats.cheapestStore}
             </p>
+            <p style={{ fontSize: '11px', color: 'var(--black-tertiary)', marginTop: '2px' }}>
+              {formatReceiptDate(stats.cheapestDate, 'medium')}
+            </p>
           </div>
         </div>
       </Card>
 
       <Card>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-          <div style={{ padding: '8px', backgroundColor: 'var(--error-bg)', borderRadius: '4px' }}>
+          <div style={{ padding: '8px', backgroundColor: 'var(--error-bg)', borderRadius: '4px', flexShrink: 0 }}>
             <TrendingUp size={20} style={{ color: 'var(--error-text)' }} />
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
@@ -46,13 +52,16 @@ export default function InsightsStatsCards({ stats }: InsightsStatsCardsProps) {
             <p style={{ fontSize: '12px', color: 'var(--black-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {stats.mostExpensiveStore}
             </p>
+            <p style={{ fontSize: '11px', color: 'var(--black-tertiary)', marginTop: '2px' }}>
+              {formatReceiptDate(stats.mostExpensiveDate, 'medium')}
+            </p>
           </div>
         </div>
       </Card>
 
       <Card>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-          <div style={{ padding: '8px', backgroundColor: 'var(--golden-light)', borderRadius: '4px' }}>
+          <div style={{ padding: '8px', backgroundColor: 'var(--golden-light)', borderRadius: '4px', flexShrink: 0 }}>
             <DollarSign size={20} style={{ color: 'var(--golden-main)' }} />
           </div>
           <div style={{ flex: 1 }}>
@@ -74,7 +83,8 @@ export default function InsightsStatsCards({ stats }: InsightsStatsCardsProps) {
           <div style={{
             padding: '8px',
             backgroundColor: stats.trend === 'up' ? 'var(--error-bg)' : stats.trend === 'down' ? 'var(--green-pale)' : 'var(--ivory-darker)',
-            borderRadius: '4px'
+            borderRadius: '4px',
+            flexShrink: 0,
           }}>
             {stats.trend === 'up' && <TrendingUp size={20} style={{ color: 'var(--error-text)' }} />}
             {stats.trend === 'down' && <TrendingDown size={20} style={{ color: 'var(--green-main)' }} />}
@@ -90,6 +100,11 @@ export default function InsightsStatsCards({ stats }: InsightsStatsCardsProps) {
             <p style={{ fontSize: '12px', color: 'var(--black-secondary)' }}>
               {stats.trend === 'up' ? 'Increasing' : stats.trend === 'down' ? 'Decreasing' : 'Stable'}
             </p>
+            {!trendSameDay && (
+              <p style={{ fontSize: '11px', color: 'var(--black-tertiary)', marginTop: '2px' }}>
+                {formatReceiptDate(stats.trendFromDate, 'medium')} → {formatReceiptDate(stats.trendToDate, 'medium')}
+              </p>
+            )}
           </div>
         </div>
       </Card>

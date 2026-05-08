@@ -145,26 +145,28 @@ export default function ItemDetail({
         />
 
         {/* Stats */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
-          <Card>
-            <p style={{ fontSize: '12px', color: 'var(--black-tertiary)', marginBottom: '8px' }}>Lowest Price</p>
-            <p style={{ fontSize: '24px', fontWeight: 700, color: 'var(--green-main)' }}>
-              {formatPrice(Math.min(...item.priceHistory.map(e => e.price)), item.latestUnit)}
-            </p>
-          </Card>
-          <Card>
-            <p style={{ fontSize: '12px', color: 'var(--black-tertiary)', marginBottom: '8px' }}>Highest Price</p>
-            <p style={{ fontSize: '24px', fontWeight: 700, color: 'var(--error-text)' }}>
-              {formatPrice(Math.max(...item.priceHistory.map(e => e.price)), item.latestUnit)}
-            </p>
-          </Card>
-          <Card>
-            <p style={{ fontSize: '12px', color: 'var(--black-tertiary)', marginBottom: '8px' }}>Stores</p>
-            <p style={{ fontSize: '24px', fontWeight: 700, color: 'var(--black-text)' }}>
-              {new Set(item.priceHistory.map(e => e.store)).size}
-            </p>
-          </Card>
-        </div>
+        {item.priceHistory.length > 0 && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+            <Card>
+              <p style={{ fontSize: '12px', color: 'var(--black-tertiary)', marginBottom: '8px' }}>Lowest Price</p>
+              <p style={{ fontSize: '24px', fontWeight: 700, color: 'var(--green-main)' }}>
+                {formatPrice(Math.min(...item.priceHistory.map(e => e.price)), item.latestUnit)}
+              </p>
+            </Card>
+            <Card>
+              <p style={{ fontSize: '12px', color: 'var(--black-tertiary)', marginBottom: '8px' }}>Highest Price</p>
+              <p style={{ fontSize: '24px', fontWeight: 700, color: 'var(--error-text)' }}>
+                {formatPrice(Math.max(...item.priceHistory.map(e => e.price)), item.latestUnit)}
+              </p>
+            </Card>
+            <Card>
+              <p style={{ fontSize: '12px', color: 'var(--black-tertiary)', marginBottom: '8px' }}>Stores</p>
+              <p style={{ fontSize: '24px', fontWeight: 700, color: 'var(--black-text)' }}>
+                {new Set(item.priceHistory.map(e => e.store)).size}
+              </p>
+            </Card>
+          </div>
+        )}
       </div>
 
       {/* Receipt Bottom Sheet */}

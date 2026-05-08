@@ -5,6 +5,7 @@ import { TrendingUp, TrendingDown, Minus, DollarSign, Store, Calendar } from 'lu
 import Card from './Card';
 import { ItemPriceEntry } from '@/lib/itemsProcessor';
 import { formatPrice, formatReceiptDate } from '@/lib/formatting';
+import { PRICE_TOLERANCE } from '@/lib/constants';
 
 interface PriceHistoryTimelineProps {
   priceHistory: ItemPriceEntry[];
@@ -19,11 +20,23 @@ function getPriceChange(current: number, previous: number) {
 }
 
 function getPriceTrend(diff: number): 'up' | 'down' | 'stable' {
-  if (Math.abs(diff) < 0.01) return 'stable';
+  if (Math.abs(diff) < PRICE_TOLERANCE) return 'stable';
   return diff > 0 ? 'up' : 'down';
 }
 
 export default function PriceHistoryTimeline({ priceHistory, latestUnit, onReceiptSelect }: PriceHistoryTimelineProps) {
+  if (priceHistory.length === 0) {
+    return (
+      <Card>
+        <h2 className="card-title">Price History</h2>
+        <div style={{ textAlign: 'center', padding: '32px 16px', color: 'var(--black-tertiary)' }}>
+          <DollarSign size={32} style={{ margin: '0 auto 12px', opacity: 0.3 }} />
+          <p>No price history recorded yet</p>
+        </div>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <h2 className="card-title">Price History</h2>
@@ -39,7 +52,7 @@ export default function PriceHistoryTimeline({ priceHistory, latestUnit, onRecei
             const change = prevEntry ? getPriceChange(entry.price, prevEntry.price) : null;
 
             return (
-              <div key={`${entry.receiptId}-${index}`} style={{ display: 'flex', gap: '16px', alignItems: 'flex-start', position: 'relative' }}>
+              <div key={entry.receiptId} style={{ display: 'flex', gap: '16px', alignItems: 'flex-start', position: 'relative' }}>
                 {/* Dot */}
                 <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: index === 0 ? 'var(--golden-main)' : 'var(--ivory-bg)', border: '3px solid var(--black-text)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
                   {trend === 'up' && <TrendingUp size={16} style={{ color: 'var(--error-text)' }} />}

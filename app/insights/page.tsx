@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { ShoppingCart } from 'lucide-react';
 import Card from '../components/Card';
 import Select from '../components/Select';
@@ -12,35 +12,43 @@ import {
   getItemNamesForAnalytics,
   prepareChartData,
   calculateStatistics,
-  getUniqueStores,
+  getStoresForItem,
 } from '@/lib/analyticsUtils';
 
 export default function InsightsPage() {
-  const { receipts, loading } = useReceipts();
+  const { receipts, loading, error } = useReceipts();
   const [selectedItem, setSelectedItem] = useState<string>('');
   const [selectedStores, setSelectedStores] = useState<string[]>([]);
 
   const itemNames = useMemo(() => getItemNamesForAnalytics(receipts), [receipts]);
-  const allStores = useMemo(() => getUniqueStores(receipts), [receipts]);
 
   const itemData = useMemo(() => {
     if (!selectedItem) return null;
     return getItemByName(receipts, selectedItem);
   }, [selectedItem, receipts]);
 
+  // Only show stores where this specific item was purchased
+  const itemStores = useMemo(() => getStoresForItem(itemData), [itemData]);
+
+  // Reset store filter whenever the selected item changes
+  useEffect(() => {
+    setSelectedStores([]);
+  }, [selectedItem]);
+
   const chartData = useMemo(() => prepareChartData(itemData, selectedStores), [itemData, selectedStores]);
   const stats = useMemo(() => calculateStatistics(itemData, selectedStores), [itemData, selectedStores]);
 
+  // Derive chart store list directly from chart data keys to stay in sync
   const chartStores = useMemo(() => {
-    if (!itemData) return [];
-    const stores = new Set<string>();
-    itemData.priceHistory.forEach(entry => {
-      if (selectedStores.length === 0 || selectedStores.includes(entry.store)) {
-        stores.add(entry.store);
-      }
+    if (chartData.length === 0) return [];
+    const storeSet = new Set<string>();
+    chartData.forEach(point => {
+      Object.keys(point).forEach(key => {
+        if (key !== 'date' && key !== 'dateObj') storeSet.add(key);
+      });
     });
-    return Array.from(stores);
-  }, [itemData, selectedStores]);
+    return Array.from(storeSet);
+  }, [chartData]);
 
   const handleStoreToggle = (store: string) => {
     setSelectedStores(prev =>
@@ -52,6 +60,15 @@ export default function InsightsPage() {
     return (
       <div style={{ textAlign: 'center', padding: '48px' }}>
         <p style={{ color: 'var(--black-secondary)' }}>Loading insights...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{ textAlign: 'center', padding: '48px' }}>
+        <h2 style={{ color: 'var(--error-text)', marginBottom: '16px' }}>Failed to load data</h2>
+        <p style={{ color: 'var(--black-secondary)' }}>{error}</p>
       </div>
     );
   }
@@ -87,13 +104,30 @@ export default function InsightsPage() {
             </Select>
           </div>
 
-          {selectedItem && allStores.length > 1 && (
+          {selectedItem && itemStores.length > 1 && (
             <div>
               <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, marginBottom: '12px', color: 'var(--black-text)' }}>
                 Filter by Store
               </label>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                {allStores.map(store => (
+                {/* "All" button is active when no store filter is applied */}
+                <button
+                  onClick={() => setSelectedStores([])}
+                  style={{
+                    padding: '8px 16px',
+                    fontSize: '14px',
+                    fontWeight: 500,
+                    border: `2px solid ${selectedStores.length === 0 ? 'var(--golden-main)' : 'var(--ivory-border)'}`,
+                    backgroundColor: selectedStores.length === 0 ? 'var(--golden-light)' : 'var(--ivory-bg)',
+                    color: 'var(--black-text)',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  All
+                </button>
+                {itemStores.map(store => (
                   <button
                     key={store}
                     onClick={() => handleStoreToggle(store)}
@@ -101,8 +135,8 @@ export default function InsightsPage() {
                       padding: '8px 16px',
                       fontSize: '14px',
                       fontWeight: 500,
-                      border: `2px solid ${selectedStores.includes(store) || selectedStores.length === 0 ? 'var(--golden-main)' : 'var(--ivory-border)'}`,
-                      backgroundColor: selectedStores.includes(store) || selectedStores.length === 0 ? 'var(--golden-light)' : 'var(--ivory-bg)',
+                      border: `2px solid ${selectedStores.includes(store) ? 'var(--golden-main)' : 'var(--ivory-border)'}`,
+                      backgroundColor: selectedStores.includes(store) ? 'var(--golden-light)' : 'var(--ivory-bg)',
                       color: 'var(--black-text)',
                       borderRadius: '4px',
                       cursor: 'pointer',
@@ -113,14 +147,6 @@ export default function InsightsPage() {
                   </button>
                 ))}
               </div>
-              {selectedStores.length > 0 && (
-                <button
-                  onClick={() => setSelectedStores([])}
-                  style={{ marginTop: '12px', padding: '6px 12px', fontSize: '12px', background: 'none', border: '1px solid var(--black-tertiary)', color: 'var(--black-secondary)', borderRadius: '4px', cursor: 'pointer' }}
-                >
-                  Clear filters
-                </button>
-              )}
             </div>
           )}
         </Card>
@@ -138,7 +164,7 @@ export default function InsightsPage() {
           <Card>
             <div style={{ textAlign: 'center', padding: '32px 16px' }}>
               <p style={{ color: 'var(--black-secondary)' }}>
-                No price data available for the selected filters
+                No price data available for the selected stores
               </p>
             </div>
           </Card>
