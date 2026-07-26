@@ -43,3 +43,7 @@ next-env.d.ts
 # Data files - keep structure but ignore actual receipts
 /data/receipts/*.json
 !/data/receipts/receipts_data.json
+
+# Local app data - auto-created, user-specific, not committed
+/data/settings/*.json
+/data/mappings/*.json

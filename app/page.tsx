@@ -5,14 +5,16 @@ import { Save, RotateCcw } from 'lucide-react';
 import ReceiptUpload from './components/ReceiptUpload';
 import StoreSelection from './components/StoreSelection';
 import DatePicker from './components/DatePicker';
-import ExtractedDataDisplay, { ExtractedData } from './components/ExtractedDataDisplay';
+import ExtractedDataDisplay from './components/ExtractedDataDisplay';
 import Button from './components/Button';
 import Card from './components/Card';
 import { getAllItemNames } from '@/lib/itemsProcessor';
+import { applyItemMappings } from '@/lib/itemMappings';
 import { useReceipts } from '@/lib/hooks/useReceipts';
 import { useStores } from '@/lib/hooks/useStores';
 import { useUnits } from '@/lib/hooks/useUnits';
-import { SavedReceipt, QueueItem } from '@/lib/types';
+import { useMappings } from '@/lib/hooks/useMappings';
+import { SavedReceipt, QueueItem, ExtractedData, ReceiptItem } from '@/lib/types';
 
 export default function Home() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -33,22 +35,28 @@ export default function Home() {
   const { receipts, loadReceipts } = useReceipts();
   const { stores, addStore: handleAddStore } = useStores();
   const { units } = useUnits();
+  const { mappings, addMapping, deleteMapping } = useMappings();
 
-  // Update existing item names when receipts change
+  // Update existing item names when receipts or mappings change. Names are
+  // derived from mapping-resolved receipts so autocomplete and mapping targets
+  // suggest canonical names (e.g. "Ginger"), not raw scanned codes.
   useEffect(() => {
     if (receipts.length > 0) {
-      setExistingItemNames(getAllItemNames(receipts));
+      setExistingItemNames(getAllItemNames(applyItemMappings(receipts, mappings)));
     }
-  }, [receipts]);
+  }, [receipts, mappings]);
 
-  // Process receipt when file is selected (single mode only)
+  // Process receipt when file is selected (single mode only). Intentionally
+  // triggers only on a new file selection.
   useEffect(() => {
     if (selectedFile && !isProcessingQueue) {
       processReceipt(selectedFile);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedFile]);
 
-  // Handle parallel receipt queue processing
+  // Handle parallel receipt queue processing. Runs when the queue or its
+  // processing flag changes; `processReceiptInQueue` is intentionally omitted.
   useEffect(() => {
     if (isProcessingQueue && receiptQueue.length > 0) {
       receiptQueue.forEach((item, index) => {
@@ -57,6 +65,7 @@ export default function Home() {
         }
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isProcessingQueue, receiptQueue]);
 
   // Load data from queue when moving to next receipt
@@ -102,8 +111,9 @@ export default function Home() {
       if (result.data.receiptDate) {
         setBillingDate(result.data.receiptDate);
       }
-    } catch (err: any) {
-      setError(err.message || 'An error occurred while processing the receipt');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'An error occurred while processing the receipt';
+      setError(message);
       console.error('Error processing receipt:', err);
     } finally {
       setIsProcessing(false);
@@ -149,21 +159,22 @@ export default function Home() {
           setBillingDate(result.data.receiptDate);
         }
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error(`Error processing receipt ${queueIndex + 1}:`, err);
-      
+      const message = err instanceof Error ? err.message : 'Failed to process receipt';
+
       setReceiptQueue(prev => {
         const updated = [...prev];
         updated[queueIndex] = {
           ...updated[queueIndex],
           status: 'error',
-          error: err.message || 'Failed to process receipt'
+          error: message
         };
         return updated;
       });
 
       if (queueIndex === currentQueueIndex) {
-        setError(err.message || 'Failed to process receipt');
+        setError(message);
       }
     }
   };
@@ -291,7 +302,7 @@ export default function Home() {
     }
   };
 
-  const handleItemChange = (index: number, updatedItem: any) => {
+  const handleItemChange = (index: number, updatedItem: ReceiptItem) => {
     if (!extractedData) return;
     
     const updatedItems = [...extractedData.items];
@@ -344,6 +355,7 @@ export default function Home() {
                   onStoreChange={setSelectedStore}
                   stores={stores}
                   onAddStore={handleAddStore}
+                  detectedStore={extractedData?.storeNameScanned || ''}
                 />
               </div>
               <div>
@@ -370,7 +382,10 @@ export default function Home() {
                 error={error}
                 existingItemNames={existingItemNames}
                 units={units}
+                mappings={mappings}
                 onItemChange={handleItemChange}
+                onMapItem={addMapping}
+                onUnmapItem={deleteMapping}
               />
             </div>
 

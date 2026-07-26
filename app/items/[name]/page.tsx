@@ -2,80 +2,67 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import ItemDetail from '../../components/ItemDetail';
+import { SavedReceipt } from '@/lib/types';
 import { getItemByName } from '@/lib/itemsProcessor';
+import { applyItemMappings, normalizeItemName } from '@/lib/itemMappings';
 import { useReceipts } from '@/lib/hooks/useReceipts';
+import { useMappings } from '@/lib/hooks/useMappings';
 import { useStores } from '@/lib/hooks/useStores';
 import { useUnits } from '@/lib/hooks/useUnits';
 
 export default function ItemDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const { receipts, loading, loadReceipts, updateReceipt, deleteReceipt } = useReceipts();
+  const { receipts, isLoading, loadReceipts, updateReceipt, deleteReceipt } = useReceipts();
+  const { mappings, isLoading: mappingsLoading, addMapping } = useMappings();
   const { stores } = useStores();
   const { units } = useUnits();
   
   // Decode the URL-encoded item name
   const itemName = decodeURIComponent(params.name as string);
-  const item = getItemByName(receipts, itemName);
+  // Derive the item from mapping-resolved receipts so mapped raw names (e.g.
+  // "AXFFDJ") fold into their canonical item. The raw `receipts` are still
+  // passed to ItemDetail below so viewing/editing a linked receipt shows and
+  // preserves its original scanned names.
+  const item = getItemByName(applyItemMappings(receipts, mappings), itemName);
 
   const handleBack = () => {
     router.push('/items');
   };
 
+  // Renaming is non-destructive: instead of rewriting every receipt, we adjust
+  // the mapping layer so every raw name that currently resolves to `oldName`
+  // now resolves to `newName`. This covers (a) existing mappings that target
+  // the old canonical name and (b) receipt items literally named `oldName`.
   const handleItemRename = async (oldName: string, newName: string) => {
     try {
-      const oldNameLower = oldName.toLowerCase().trim();
-      const updatedReceipts = receipts.map(receipt => {
-        const hasMatchingItem = receipt.extractedData.items.some(
-          item => item.name.toLowerCase().trim() === oldNameLower
-        );
+      const oldNorm = normalizeItemName(oldName);
+      const newNorm = normalizeItemName(newName);
 
-        if (!hasMatchingItem) return receipt;
-
-        const updatedItems = receipt.extractedData.items.map(item => {
-          if (item.name.toLowerCase().trim() === oldNameLower) {
-            return { ...item, name: newName };
-          }
-          return item;
-        });
-
-        return {
-          ...receipt,
-          extractedData: {
-            ...receipt.extractedData,
-            items: updatedItems
-          }
-        };
-      });
-
-      for (const receipt of updatedReceipts) {
-        const originalReceipt = receipts.find(r => r.id === receipt.id);
-        if (originalReceipt && JSON.stringify(originalReceipt) !== JSON.stringify(receipt)) {
-          await fetch('/api/receipts', {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-              id: receipt.id, 
-              updates: { extractedData: receipt.extractedData } 
-            }),
-          });
-        }
+      // (a) Re-point existing mappings that target the old canonical name.
+      const affected = mappings.filter(m => normalizeItemName(m.canonicalName) === oldNorm);
+      for (const mapping of affected) {
+        const result = await addMapping(mapping.rawName, newName);
+        if (!result.success) throw new Error(result.error || 'Failed to update mapping');
       }
 
-      await loadReceipts();
+      // (b) Map the literal old name so unmapped items named exactly `oldName`
+      // resolve to the new canonical name too. Skipped when only casing changed.
+      if (oldNorm !== newNorm) {
+        const result = await addMapping(oldName, newName);
+        if (!result.success) throw new Error(result.error || 'Failed to create mapping');
+      }
 
-      // Navigate to the new item name
+      // The redirect to the new item page is itself the success confirmation.
       const encodedNewName = encodeURIComponent(newName);
       router.push(`/items/${encodedNewName}`);
-
-      alert(`Item renamed successfully! ${oldName} → ${newName}`);
     } catch (error) {
       console.error('Error renaming item:', error);
       throw error;
     }
   };
 
-  if (loading) {
+  if (isLoading || mappingsLoading) {
     return (
       <div style={{ textAlign: 'center', padding: '48px' }}>
         <p style={{ color: 'var(--black-secondary)' }}>Loading item...</p>
@@ -88,7 +75,7 @@ export default function ItemDetailPage() {
       <div style={{ textAlign: 'center', padding: '48px' }}>
         <h2 style={{ color: 'var(--black-text)', marginBottom: '16px' }}>Item Not Found</h2>
         <p style={{ color: 'var(--black-secondary)', marginBottom: '24px' }}>
-          The item "{itemName}" could not be found.
+          The item &ldquo;{itemName}&rdquo; could not be found.
         </p>
         <button onClick={handleBack} className="btn-secondary">
           Back to Items
@@ -97,7 +84,7 @@ export default function ItemDetailPage() {
     );
   }
 
-  const handleReceiptUpdate = async (id: string, updates: any) => {
+  const handleReceiptUpdate = async (id: string, updates: Partial<SavedReceipt>) => {
     const result = await updateReceipt(id, updates);
     if (!result.success) {
       alert('Failed to update receipt: ' + result.error);
@@ -124,7 +111,7 @@ export default function ItemDetailPage() {
       onReceiptUpdate={handleReceiptUpdate}
       onReceiptDelete={handleReceiptDelete}
       onReceiptsReload={loadReceipts}
-      receiptsLoading={loading}
+      receiptsLoading={isLoading}
     />
   );
 }

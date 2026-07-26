@@ -6,7 +6,7 @@ export const runtime = 'nodejs';
 /**
  * GET /api/stores - Get all stores
  */
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const stores = getAllStores();
     return NextResponse.json({ success: true, stores });

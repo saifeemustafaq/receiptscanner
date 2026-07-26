@@ -1,5 +1,8 @@
+// Standalone smoke test for the Gemini API key. Run via:
+//   npm run test:gemini
+// which loads .env.local with Node's built-in --env-file flag (Node 20+),
+// so no `dotenv` dependency is required.
 const { GoogleGenAI } = require('@google/genai');
-require('dotenv').config({ path: '.env.local' });
 
 async function testGeminiAPI() {
   console.log('🧪 Testing Gemini API Key for Receipt Scanner...\n');

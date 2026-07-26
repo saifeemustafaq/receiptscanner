@@ -1,7 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-
-const DEFAULT_UNITS = ['g', 'kg', 'oz', 'lb', 'lbs', 'ml', 'l', 'ea', 'pcs', 'ct'];
+import { DEFAULT_UNITS } from './defaults';
 
 /**
  * Get units data directory

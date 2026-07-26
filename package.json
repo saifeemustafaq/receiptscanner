@@ -6,15 +6,19 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:gemini": "node --env-file=.env.local scripts/test-gemini.js",
+    "test:pdf": "node --env-file=.env.local scripts/test-pdf-extract.js"
   },
   "dependencies": {
     "@google/genai": "^1.32.0",
     "lucide-react": "^0.556.0",
     "next": "16.0.8",
+    "openai": "^6.49.0",
     "react": "19.2.1",
     "react-dom": "19.2.1",
-    "recharts": "^3.5.1"
+    "recharts": "^3.5.1",
+    "unpdf": "^1.8.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

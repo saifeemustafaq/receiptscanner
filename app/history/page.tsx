@@ -1,12 +1,13 @@
 'use client';
 
 import ReceiptHistory from '../components/ReceiptHistory';
+import { SavedReceipt } from '@/lib/types';
 import { useReceipts } from '@/lib/hooks/useReceipts';
 import { useStores } from '@/lib/hooks/useStores';
 import { useUnits } from '@/lib/hooks/useUnits';
 
 export default function HistoryPage() {
-  const { receipts, loading, deleteReceipt, updateReceipt, exportReceipts } = useReceipts();
+  const { receipts, isLoading, deleteReceipt, updateReceipt, exportReceipts } = useReceipts();
   const { stores } = useStores();
   const { units } = useUnits();
 
@@ -17,7 +18,7 @@ export default function HistoryPage() {
     }
   };
 
-  const handleUpdate = async (id: string, updates: any) => {
+  const handleUpdate = async (id: string, updates: Partial<SavedReceipt>) => {
     const result = await updateReceipt(id, updates);
     if (!result.success) {
       alert('Failed to update receipt: ' + result.error);
@@ -31,7 +32,7 @@ export default function HistoryPage() {
     }
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div style={{ textAlign: 'center', padding: '48px' }}>
         <p style={{ color: 'var(--black-secondary)' }}>Loading receipts...</p>

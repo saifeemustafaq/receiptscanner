@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { Trash2, Download, Eye, Filter, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { Trash2, Download, Eye, Filter, X } from 'lucide-react';
 import Card from './Card';
 import Button from './Button';
 import ReceiptDetailView from './ReceiptDetailView';
@@ -22,7 +22,7 @@ interface ReceiptHistoryProps {
   stores: string[];
   units: string[];
   onDelete: (id: string) => void;
-  onUpdate: (id: string, updates: any) => void;
+  onUpdate: (id: string, updates: Partial<SavedReceipt>) => void;
   onExport: () => void;
 }
 
@@ -394,7 +394,13 @@ export default function ReceiptHistory({ receipts, stores, units, onDelete, onUp
                 <Card>
                   <div className="flex items-center justify-between">
                     <div style={{ flex: 1 }}>
-                      <h3 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '4px' }}>
+                      <h3
+                        onClick={() => toggleExpanded(receipt.id)}
+                        title="Click to view"
+                        style={{ fontSize: '20px', fontWeight: 600, marginBottom: '4px', cursor: 'pointer', display: 'inline-block' }}
+                        onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--golden-dark)')}
+                        onMouseLeave={(e) => (e.currentTarget.style.color = '')}
+                      >
                         {receipt.storeNameSelected}
                       </h3>
                       <div style={{ fontSize: '14px', color: 'var(--black-secondary)' }}>

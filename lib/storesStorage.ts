@@ -1,7 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-
-const DEFAULT_STORES = ['Walmart', 'Target', 'Costco', 'Whole Foods', 'Kroger'];
+import { DEFAULT_STORES } from './defaults';
 
 /**
  * Get stores data directory

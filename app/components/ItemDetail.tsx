@@ -6,7 +6,7 @@ import Card from './Card';
 import Button from './Button';
 import BottomSheet from './BottomSheet';
 import ReceiptDetailView from './ReceiptDetailView';
-import { ProcessedItem } from '@/lib/itemsProcessor';
+import { ProcessedItem, primaryDimensionHistory } from '@/lib/itemsProcessor';
 import { SavedReceipt } from '@/lib/types';
 
 interface ItemDetailProps {
@@ -16,7 +16,7 @@ interface ItemDetailProps {
   units: string[];
   onBack: () => void;
   onItemRename?: (oldName: string, newName: string) => Promise<void>;
-  onReceiptUpdate?: (id: string, updates: any) => Promise<void>;
+  onReceiptUpdate?: (id: string, updates: Partial<SavedReceipt>) => Promise<void>;
   onReceiptDelete?: (id: string) => Promise<void>;
   onReceiptsReload?: () => Promise<void>;
   receiptsLoading?: boolean;
@@ -38,6 +38,8 @@ export default function ItemDetail({
   const [editedName, setEditedName] = useState(item.name);
   const [isSaving, setIsSaving] = useState(false);
   const [selectedReceiptId, setSelectedReceiptId] = useState<string | null>(null);
+  // Min/max compare within the primary dimension only ($/lb vs $/ea don't mix).
+  const primaryHistory = primaryDimensionHistory(item);
   const formatPrice = (price: number, unit: string | null) => {
     const priceStr = `$${price.toFixed(2)}`;
     return unit ? `${priceStr}/${unit}` : priceStr;
@@ -190,7 +192,7 @@ export default function ItemDetail({
               color: 'var(--golden-main)',
               marginBottom: '8px'
             }}>
-              {formatPrice(item.latestPrice, item.latestUnit)}
+              {formatPrice(item.latestPrice, item.latestBaseUnit)}
             </p>
             <p style={{ fontSize: '14px', color: 'var(--black-secondary)' }}>
               at {item.latestStore} • {new Date(item.latestDate + 'T00:00:00').toLocaleDateString('en-US', {
@@ -222,8 +224,11 @@ export default function ItemDetail({
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {item.priceHistory.map((entry, index) => {
                 const prevEntry = item.priceHistory[index + 1];
-                const trend = prevEntry ? getPriceTrend(entry.price - prevEntry.price) : null;
-                const change = prevEntry ? getPriceChange(entry.price, prevEntry.price) : null;
+                // Only compare consecutive entries in the same dimension — a
+                // $/lb vs $/ea delta is meaningless.
+                const comparable = prevEntry != null && prevEntry.dimension === entry.dimension;
+                const trend = comparable ? getPriceTrend(entry.price - prevEntry.price) : null;
+                const change = comparable ? getPriceChange(entry.price, prevEntry.price) : null;
 
                 return (
                   <div 
@@ -270,7 +275,7 @@ export default function ItemDetail({
                             fontWeight: 700,
                             color: index === 0 ? 'var(--golden-main)' : 'var(--black-text)'
                           }}>
-                            {formatPrice(entry.price, entry.unit)}
+                            {formatPrice(entry.price, entry.baseUnit)}
                           </p>
                           {change && (
                             <p style={{ 
@@ -344,7 +349,7 @@ export default function ItemDetail({
               Lowest Price
             </p>
             <p style={{ fontSize: '24px', fontWeight: 700, color: 'var(--green-main)' }}>
-              {formatPrice(Math.min(...item.priceHistory.map(e => e.price)), item.latestUnit)}
+              {formatPrice(Math.min(...primaryHistory.map(e => e.price)), item.latestBaseUnit)}
             </p>
           </Card>
 
@@ -353,7 +358,7 @@ export default function ItemDetail({
               Highest Price
             </p>
             <p style={{ fontSize: '24px', fontWeight: 700, color: 'var(--error-text)' }}>
-              {formatPrice(Math.max(...item.priceHistory.map(e => e.price)), item.latestUnit)}
+              {formatPrice(Math.max(...primaryHistory.map(e => e.price)), item.latestBaseUnit)}
             </p>
           </Card>
 

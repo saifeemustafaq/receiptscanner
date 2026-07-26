@@ -76,13 +76,17 @@ export default function ReceiptUpload({ onReceiptSelect, selectedFile, queueInfo
     };
   }, [previewUrl, previewType]);
 
-  // Clean up previous PDF URL when file changes
+  // Clean up a stale PDF preview when the selected file changes to a non-PDF.
+  // This effect performs a real side effect (revoking the object URL), so the
+  // accompanying state reset legitimately lives here; it intentionally runs only
+  // when `selectedFile` changes and reads the latest preview values.
   useEffect(() => {
     if (selectedFile && selectedFile.type !== 'application/pdf' && previewType === 'pdf' && previewUrl) {
       URL.revokeObjectURL(previewUrl);
       setPreviewUrl(null);
       setPreviewType(null);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedFile]);
 
   const handleCameraClick = () => cameraInputRef.current?.click();
@@ -240,9 +244,13 @@ export default function ReceiptUpload({ onReceiptSelect, selectedFile, queueInfo
                 />
               </div>
             ) : (
-              <img 
-                src={previewUrl || ''} 
-                alt="Receipt preview" 
+              // A transient object-URL preview of the user's upload; next/image
+              // doesn't fit blob: URLs without `unoptimized`, so a plain <img> is
+              // the right tool here.
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={previewUrl || ''}
+                alt="Receipt preview"
                 style={{
                   width: '100%',
                   maxHeight: '384px',

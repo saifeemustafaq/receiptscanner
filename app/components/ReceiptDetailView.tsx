@@ -4,13 +4,16 @@ import React, { useState } from 'react';
 import { Trash2, Edit2, Check, X } from 'lucide-react';
 import Card from './Card';
 import Select from './Select';
-import { SavedReceipt } from '@/lib/types';
+import { SavedReceipt, ReceiptItem } from '@/lib/types';
+import { displayUnitPrice } from '@/lib/measure';
+import { DEFAULT_UNIT } from '@/lib/defaults';
+import { totalsBreakdown } from '@/lib/receiptMath';
 
 interface ReceiptDetailViewProps {
   receipt: SavedReceipt;
   stores: string[];
   units: string[];
-  onUpdate: (id: string, updates: any) => void;
+  onUpdate: (id: string, updates: Partial<SavedReceipt>) => void;
   onDelete: (id: string) => void;
   showHeader?: boolean; // Whether to show the header with store name and actions
 }
@@ -26,8 +29,8 @@ export default function ReceiptDetailView({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editedStoreName, setEditedStoreName] = useState('');
   const [editingField, setEditingField] = useState<{itemIndex: number, field: string} | null>(null);
-  const [tempValue, setTempValue] = useState<any>('');
-  const [editedItems, setEditedItems] = useState<any[]>([]);
+  const [tempValue, setTempValue] = useState<string | number | null>('');
+  const [editedItems, setEditedItems] = useState<ReceiptItem[]>([]);
 
   const getStoreOptions = () => {
     return [
@@ -61,10 +64,10 @@ export default function ReceiptDetailView({
     }
   };
 
-  const startEditingField = (itemIndex: number, field: string, currentValue: any) => {
+  const startEditingField = (itemIndex: number, field: string, currentValue: string | number | null | undefined) => {
     setEditedItems(JSON.parse(JSON.stringify(receipt.extractedData.items))); // Deep copy
     setEditingField({ itemIndex, field });
-    setTempValue(currentValue);
+    setTempValue(currentValue ?? '');
   };
 
   const cancelEditingField = () => {
@@ -83,7 +86,7 @@ export default function ReceiptDetailView({
     if (field === 'unit') {
       updatedItems[itemIndex] = { 
         ...updatedItems[itemIndex], 
-        unit: tempValue === '' || tempValue === null ? null : tempValue 
+        unit: tempValue === '' || tempValue === null ? null : String(tempValue)
       };
     } else {
       updatedItems[itemIndex] = { ...updatedItems[itemIndex], [field]: tempValue };
@@ -235,7 +238,7 @@ export default function ReceiptDetailView({
                         <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                           <input
                             type="text"
-                            value={tempValue}
+                            value={tempValue ?? ''}
                             onChange={(e) => setTempValue(e.target.value)}
                             onKeyDown={handleFieldKeyDown}
                             autoFocus
@@ -270,7 +273,7 @@ export default function ReceiptDetailView({
                         <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end' }}>
                           <input
                             type="number"
-                            value={tempValue}
+                            value={tempValue ?? ''}
                             onChange={(e) => setTempValue(parseFloat(e.target.value) || 0)}
                             onKeyDown={handleFieldKeyDown}
                             autoFocus
@@ -287,7 +290,7 @@ export default function ReceiptDetailView({
                           <span 
                             onClick={() => {
                               const currentItem = editedItems[idx];
-                              startEditingField(idx, 'unit', currentItem.unit || '');
+                              startEditingField(idx, 'unit', currentItem.unit || DEFAULT_UNIT);
                             }}
                             style={{ 
                               minWidth: '30px', 
@@ -300,7 +303,7 @@ export default function ReceiptDetailView({
                             onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                             title="Click to edit unit"
                           >
-                            {item.unit || ''}
+                            {item.unit || DEFAULT_UNIT}
                           </span>
                           <button onClick={(e) => { e.stopPropagation(); saveFieldEdit(); }} style={{ padding: '4px', cursor: 'pointer', background: 'none', border: 'none' }}>
                             <Check size={16} color="var(--green-main)" />
@@ -313,7 +316,7 @@ export default function ReceiptDetailView({
                         <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end' }}>
                           <span style={{ fontSize: '14px' }}>{item.quantity || '-'}</span>
                           <select
-                            value={tempValue || ''}
+                            value={tempValue || DEFAULT_UNIT}
                             onChange={(e) => setTempValue(e.target.value)}
                             onKeyDown={handleFieldKeyDown}
                             autoFocus
@@ -326,8 +329,10 @@ export default function ReceiptDetailView({
                               cursor: 'pointer',
                             }}
                           >
-                            <option value="">(no unit)</option>
-                            {units.map(unit => (
+                            {(units.includes(String(tempValue || DEFAULT_UNIT))
+                              ? units
+                              : [String(tempValue || DEFAULT_UNIT), ...units]
+                            ).map(unit => (
                               <option key={unit} value={unit}>
                                 {unit}
                               </option>
@@ -351,19 +356,19 @@ export default function ReceiptDetailView({
                             {item.quantity || '-'}
                           </span>
                           <span
-                            onClick={() => startEditingField(idx, 'unit', item.unit || '')}
+                            onClick={() => startEditingField(idx, 'unit', item.unit || DEFAULT_UNIT)}
                             style={{ 
                               cursor: 'pointer', 
                               padding: '4px 8px', 
                               borderRadius: '4px',
                               fontSize: '12px',
-                              color: item.unit ? 'var(--black-text)' : 'var(--black-tertiary)'
+                              color: 'var(--black-text)'
                             }}
                             onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--ivory-darker)'}
                             onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                             title="Click to edit unit"
                           >
-                            {item.unit || '(no unit)'}
+                            {item.unit || DEFAULT_UNIT}
                           </span>
                         </div>
                       )}
@@ -373,7 +378,7 @@ export default function ReceiptDetailView({
                         <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end' }}>
                           <input
                             type="number"
-                            value={tempValue}
+                            value={tempValue ?? ''}
                             onChange={(e) => setTempValue(parseFloat(e.target.value) || 0)}
                             onKeyDown={handleFieldKeyDown}
                             autoFocus
@@ -402,7 +407,7 @@ export default function ReceiptDetailView({
                           onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--ivory-darker)'}
                           onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                         >
-                          {item.unitPrice ? `$${item.unitPrice.toFixed(2)}` : '-'}
+                          {(() => { const dp = displayUnitPrice(item); return dp != null ? `$${dp.toFixed(2)}` : '-'; })()}
                         </span>
                       )}
                     </td>
@@ -411,7 +416,7 @@ export default function ReceiptDetailView({
                         <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end' }}>
                           <input
                             type="number"
-                            value={tempValue}
+                            value={tempValue ?? ''}
                             onChange={(e) => setTempValue(parseFloat(e.target.value) || 0)}
                             onKeyDown={handleFieldKeyDown}
                             autoFocus
@@ -445,6 +450,12 @@ export default function ReceiptDetailView({
                         </span>
                       )}
                     </td>
+                  </tr>
+                ))}
+                {totalsBreakdown(receipt.extractedData).map((row, i) => (
+                  <tr key={`br-${i}`} style={{ borderTop: i === 0 ? '2px solid var(--black-text)' : 'none' }}>
+                    <td colSpan={3} style={{ padding: '6px 12px', textAlign: 'right', fontSize: '14px', color: 'var(--black-secondary)' }}>{row.label}:</td>
+                    <td style={{ padding: '6px 12px', textAlign: 'right', fontSize: '14px', color: 'var(--black-secondary)' }}>${row.amount.toFixed(2)}</td>
                   </tr>
                 ))}
                 <tr style={{

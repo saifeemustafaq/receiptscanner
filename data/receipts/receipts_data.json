@@ -1814,5 +1814,77 @@
       "total": 909.66
     },
     "timestamp": "2025-12-15T03:54:25.632Z"
+  },
+  {
+    "id": "1785093349496",
+    "storeNameScanned": "Restaurant Depot",
+    "storeNameSelected": "Restaurant Depot",
+    "billingDate": "2026-07-18",
+    "uploadDate": "2026-07-26",
+    "extractedData": {
+      "storeNameScanned": "Restaurant Depot",
+      "receiptDate": "2026-07-18",
+      "items": [
+        {
+          "name": "Chaokoh - Coconut Milk - # 10 can (98 fl oz)",
+          "quantity": 12,
+          "unitPrice": null,
+          "totalPrice": 161.2,
+          "unit": "ea"
+        },
+        {
+          "name": "Frozen James Farm - IQF Peas - 2.5 lbs (2.5 lb)",
+          "quantity": 2,
+          "unitPrice": 4.99,
+          "totalPrice": 9.98,
+          "unit": "ea"
+        },
+        {
+          "name": "Frozen James Farm - IQF Mukimame Soy Beans - 2 lbs (2 lb)",
+          "quantity": 3,
+          "unitPrice": 5.99,
+          "totalPrice": 17.97,
+          "unit": "ea"
+        },
+        {
+          "name": "Casetti - 75/25 Style Blend Extra Virgin Olive Oil Blend - 35 lb (35 lb)",
+          "quantity": 1,
+          "unitPrice": null,
+          "totalPrice": 59.99,
+          "unit": "ea"
+        },
+        {
+          "name": "Chef's Quality - Canola Frying Oil for Heavy Duty Frying - 35 lbs (35 lb)",
+          "quantity": 1,
+          "unitPrice": null,
+          "totalPrice": 44.99,
+          "unit": "ea"
+        },
+        {
+          "name": "Peeled Garlic (30 x 30 x 3 lb)",
+          "quantity": 6,
+          "unitPrice": null,
+          "totalPrice": 82.6,
+          "unit": "ea"
+        },
+        {
+          "name": "Cilantro - 24 ct (24 ct)",
+          "quantity": 24,
+          "unitPrice": null,
+          "totalPrice": 11.99,
+          "unit": "ea"
+        }
+      ],
+      "subtotal": 388.72,
+      "tax": null,
+      "additionalCharges": [
+        {
+          "label": "Service Fee",
+          "amount": 34.71
+        }
+      ],
+      "total": 423.43
+    },
+    "timestamp": "2026-07-26T19:15:49.496Z"
   }
 ]

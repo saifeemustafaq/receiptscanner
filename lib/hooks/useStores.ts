@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-
-const DEFAULT_STORES = ['Walmart', 'Target', 'Costco', 'Whole Foods', 'Kroger'];
+import { DEFAULT_STORES } from '@/lib/defaults';
+import type { MutationResult } from '@/lib/types';
 
 export function useStores() {
   const [stores, setStores] = useState<string[]>([]);
@@ -32,14 +32,14 @@ export function useStores() {
     }
   };
 
-  const addStore = async (storeName: string) => {
+  const addStore = async (storeName: string): Promise<MutationResult> => {
     const trimmed = storeName.trim();
-    if (!trimmed) return;
+    if (!trimmed) return { success: false, error: 'Store name cannot be empty' };
     
     // Check if store already exists locally (case-insensitive)
     const lowerCased = trimmed.toLowerCase();
     if (stores.some(s => s.toLowerCase() === lowerCased)) {
-      return; // Already exists
+      return { success: false, error: 'This store already exists' };
     }
     
     try {
@@ -55,15 +55,17 @@ export function useStores() {
       
       if (data.success && Array.isArray(data.stores)) {
         setStores(data.stores);
-      } else {
-        console.error('Failed to add store:', data.error);
+        return { success: true };
       }
+      console.error('Failed to add store:', data.error);
+      return { success: false, error: data.error || 'Failed to add store' };
     } catch (error) {
       console.error('Error adding store:', error);
+      return { success: false, error: 'Failed to add store' };
     }
   };
 
-  const deleteStore = async (storeName: string) => {
+  const deleteStore = async (storeName: string): Promise<MutationResult> => {
     try {
       const response = await fetch(`/api/stores?store=${encodeURIComponent(storeName)}`, {
         method: 'DELETE',
@@ -73,15 +75,17 @@ export function useStores() {
       
       if (data.success && Array.isArray(data.stores)) {
         setStores(data.stores);
-      } else {
-        console.error('Failed to delete store:', data.error);
+        return { success: true };
       }
+      console.error('Failed to delete store:', data.error);
+      return { success: false, error: data.error || 'Failed to delete store' };
     } catch (error) {
       console.error('Error deleting store:', error);
+      return { success: false, error: 'Failed to delete store' };
     }
   };
 
-  const clearAll = async () => {
+  const clearAll = async (): Promise<MutationResult> => {
     try {
       // Reset to default stores by saving them
       const response = await fetch('/api/stores', {
@@ -96,10 +100,14 @@ export function useStores() {
       
       if (data.success && Array.isArray(data.stores)) {
         setStores(data.stores);
+        return { success: true };
       }
+      console.error('Failed to clear stores:', data.error);
+      return { success: false, error: data.error || 'Failed to clear stores' };
     } catch (error) {
       console.error('Error clearing stores:', error);
       setStores(DEFAULT_STORES);
+      return { success: false, error: 'Failed to clear stores' };
     }
   };
 

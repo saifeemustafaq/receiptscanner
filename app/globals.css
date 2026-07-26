@@ -28,6 +28,12 @@
   /* Colors - Accent */
   --error-text: #8B3A3A;
   --error-bg: #C84B4B;
+  --error-pale: #FFEBEE;
+
+  /* Colors - Info / Warning */
+  --info-main: #2B5F8F;
+  --warning-bg: #FFF3CD;
+  --warning-border: #FFC107;
   
   /* Spacing */
   --space-xs: 0.25rem;
@@ -231,7 +237,7 @@ input, select, textarea {
 
 .btn-danger {
   background: var(--error-bg);
-  color: white;
+  color: var(--ivory-bg);
   border-color: var(--error-bg);
 }
 

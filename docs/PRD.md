@@ -20,9 +20,9 @@ Receipt Scanner addresses this by providing an interface that:
 
 ## 2. Product overview
 
-**Receipt Scanner** is a mobile-first web application that lets users scan or upload receipts (images or PDFs), extract structured data using Google Gemini AI, and manage receipt history with search, filtering, and export. The app also builds an item catalog from all receipts and provides price insights (stats and trends) per item, with optional store filtering. There is no user authentication; data is stored on the server in JSON files under `data/`.
+**Receipt Scanner** is a mobile-first web application that lets users scan or upload receipts (images or PDFs), extract structured data using a configurable AI provider (**OpenAI or Google Gemini**), and manage receipt history with search, filtering, and export. The app also builds an item catalog from all receipts and provides price insights (stats and trends) per item, with optional store filtering. There is no user authentication; data is stored on the server in JSON files under `data/`.
 
-**Tech stack (for context):** Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS 4, Google Gemini (`gemini-2.0-flash-exp`), Recharts, Lucide React.
+**Tech stack (for context):** Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS 4, OpenAI (`gpt-4o`) and Google Gemini (`gemini-2.0-flash-exp`) — switchable in Settings, Recharts, Lucide React.
 
 ---
 
@@ -34,17 +34,20 @@ Receipt Scanner addresses this by providing an interface that:
   - **Camera:** Use device camera to capture a receipt (via file input `accept="image/*"`).
   - **File upload:** Choose one or more files from the device. Supports **images** (e.g. JPG, PNG) and **PDFs** (including multi-page); all pages are processed.
 - **Multi-receipt queue:** User can select up to **5 files** at once. When multiple files are selected, they are processed in parallel; the user steps through each receipt to confirm store/date, edit items, and save. Queue status (current index, total, per-item status) is shown.
-- **AI extraction:** Each file is sent to `POST /api/process-receipt`. Gemini extracts:
+- **AI extraction:** Each file is sent to `POST /api/process-receipt`, which routes to the active AI provider (OpenAI or Gemini). It extracts:
   - Store name (as seen on receipt)
   - Receipt date
-  - Line items: name, quantity, unit, unit price, total price
-  - Receipt total
-  - Prompt handles multi-line items, bulk vs packaged units, and date normalization to `YYYY-MM-DD`.
-- **Store selection:** User picks a store from a managed list (with option to add a new store). Both scanned store name and selected store are stored.
+  - Line items: name (including any pack-size text), quantity, unit, unit price, total price — all recorded **exactly as printed**
+  - Receipt total, plus **subtotal and tax** when printed
+  - Prompt handles multi-line items, discounted/promo line totals, and date normalization to `YYYY-MM-DD`. It does **not** decide bulk-vs-packaged or compute per-unit prices — pack sizes are parsed from item names and normalized to a comparable price-per-base-unit by deterministic code afterward.
+  - **Text-first PDFs:** digital PDFs (e.g. Instacart/Amazon receipts) are read from their embedded text layer for faster, cheaper, more accurate extraction; image-only PDFs and photos automatically fall back to vision/OCR. This is transparent to the user.
+- **Store selection:** User picks a store from a managed list (with option to add a new store). When the AI detected a store name, a **one-click action** appears beneath the picker: if that store already exists it selects it ("Use detected store …"); if it's new it creates and selects it in one tap ("Add & use …") — no trip through the manual add-store form. Both scanned store name and selected store are stored.
 - **Date:** Billing date is pre-filled from the extracted receipt date when available; user can change it. Upload date is set automatically (Pacific time) when saving.
 - **Extracted data display and editing:** After processing, the user sees a list of line items and can:
   - Edit **item name** (with autocomplete from existing item names across receipts).
   - Edit **quantity**, **unit** (from a list of known units), **unit price**; **total price** is auto-calculated when quantity or unit price changes.
+  - See **non-blocking math checks**: a line is flagged when quantity × unit price doesn't match its printed total, and a banner notes when the items + tax don't reconcile with the grand total (fees/deposits/coupons are called out as "unaccounted adjustments"). Warnings never prevent saving and clear as the user corrects values.
+  - **Map an item** to a canonical name right on the review screen (e.g. a cryptic "AXFFDJ" → "Ginger"). Mapping is **non-destructive** (the receipt keeps its raw scanned name) and is **learned**: the mapped item shows a "mapped from &lt;raw&gt;" badge, and the same raw name resolves automatically on future scans and across past receipts. For readable names the control offers a **one-tap suggestion** (e.g. "Cilantro 24 ct" pre-proposes "Cilantro"); opaque codes stay manual.
 - **Actions:** **Save receipt** (requires store and billing date), or **Reset** to clear the form and queue.
 
 ### 3.2 Receipt history (`/history`)
@@ -61,26 +64,39 @@ Receipt Scanner addresses this by providing an interface that:
 ### 3.3 Items catalog (`/items` and `/items/[name]`)
 
 - **Items list (`/items`):** Shows all **unique items** derived from saved receipts (via `lib/itemsProcessor`). Each item is clickable and links to its detail page.
+- **Items list (`/items`):** items fold together variants that differ only by pack size (e.g. loose "Red Onion" and "Red Onion 25 LB"), and prices are shown per **base unit** ($/lb, $/l, $/ea) so different sizes are comparable at a glance. **Count packs** are normalized to a per-each price too — "Cilantro 24 ct" at $11.99 is shown and compared as ≈$0.50/ea.
 - **Item detail (`/items/[name]`):**
-  - **Price history:** All purchases of that item across receipts (store, price, unit, date, receipt).
-  - **Rename item:** User can rename the item; the change is propagated to every receipt that contains it (multiple `PATCH` calls, then redirect to the new item URL).
+  - **Price history:** All purchases of that item across receipts (store, price-per-base-unit, date, receipt). Purchases sold in a different unit type (e.g. by-each vs by-weight) are kept but compared only within their own unit, never averaged together.
+  - **Rename item:** User can rename the item. Renaming is **non-destructive** — instead of rewriting receipts, it updates the mapping layer so every raw name that resolved to the old name now resolves to the new one (then redirects to the new item URL). Renaming to match another item merges their price histories.
   - **Linked receipts:** User can open, edit, or delete receipts that contain this item.
 
 ### 3.4 Insights (`/insights`)
 
 - **Item selection:** User selects one item from a dropdown (items that have price data).
 - **Store filter (optional):** User can filter by one or more stores; "Clear filters" shows all stores again.
-- **Statistics (when item and data exist):**
+- **Statistics (when item and data exist):** all expressed **per base unit** ($/lb, $/l, $/ea), so a bulk bag and a loose purchase compare directly.
   - **Cheapest:** Lowest price and which store.
   - **Highest:** Highest price and which store.
   - **Average:** Average price and total number of purchases.
   - **Price trend:** Percentage change and direction (up / down / stable), based on first vs last purchase.
-- **Price history chart:** Recharts line chart of price over time. One series per store (when multiple stores have data); optional store filter applies. X-axis: date; Y-axis: price; tooltips and legend by store.
+  - When an item was bought in more than one unit type, a **"mixed units" note** appears and only the dominant unit's purchases are compared.
+- **Price history chart:** Recharts line chart of price-per-base-unit over time. One series per store (when multiple stores have data); optional store filter applies. X-axis: date; Y-axis: $/base-unit; tooltips and legend by store.
 
 ### 3.5 Settings (`/settings`)
 
+- **AI provider:** Choose the active extraction provider (**OpenAI** or **Google Gemini**); only one is active at a time. The selection is persisted server-side (`/api/settings`) and used by `/api/process-receipt`. Default is OpenAI.
 - **Stores:** Add store, delete store. "Clear all" resets stores (and units) to defaults.
 - **Units:** Add unit, delete unit. Units can also be **discovered** from receipt data (API: `GET /api/units?action=discover`), merging receipt units into the saved list. "Clear all" resets units to defaults along with stores.
+
+### 3.6 Mappings (`/mappings`)
+
+A dedicated area (its own nav tab, separate from Settings) for managing learned associations between raw scanned item names and canonical items.
+
+- Lists every distinct scanned name (split into **Mapped** and **Unmapped**), with a filter.
+- Map an unmapped name to an existing item, **create a brand-new canonical item** by typing a name that doesn't exist yet (e.g. map "Apple Fuji" → new item "Apple"), change a mapping's target, or remove one.
+- A one-tap smart suggestion is offered only when it would actually change grouping (redundant size-only suggestions are hidden, since the app already groups by core name).
+- **AI batch mapping:** For large backlogs of unmapped items, an **AI Mapping** action processes a batch at once. The user picks a size (**up to 10** or **up to 20**), a random set of unmapped items is sent to the active AI provider (with existing items + mappings as context), and it proposes a canonical for each — creating a new item where none fits. Suggestions are **conservative** (it never collapses genuinely different products, e.g. Red vs Yellow vs White Onion stay separate) and appear in an **editable preview**: the user edits any canonical, unticks any to skip, then applies. Nothing is written until the user approves.
+- Mappings are non-destructive and apply retroactively so an item's full price history stays under one canonical name.
 
 ---
 
@@ -171,12 +187,14 @@ The following journeys describe how a volunteer (or staff) uses the app in a com
 - **Receipts:** Stored in `data/receipts/receipts_data.json` (read/write via `lib/receiptStorage.ts`).
 - **Stores:** `data/stores/stores_data.json` (`lib/storesStorage.ts`). Missing file is initialized with default store list.
 - **Units:** `data/units/units_data.json` (`lib/unitsStorage.ts`). Missing file is initialized with default units; discovery merges in units found in receipts.
+- **Item mappings:** `data/mappings/mappings_data.json` (`lib/mappingsStorage.ts`). Learned raw→canonical associations; a non-destructive overlay resolved at read time (`lib/itemMappings.ts`). Missing file is initialized empty.
 
 **Key types:**
 
 - **SavedReceipt:** `id`, `storeNameScanned`, `storeNameSelected`, `billingDate`, `uploadDate`, `extractedData`, `timestamp`.
-- **ExtractedData:** `items[]` (name, quantity, unitPrice?, totalPrice, unit?), `total`, `storeNameScanned?`, `receiptDate?`.
-- **ProcessedItem** (items catalog): `name`, `normalizedName`, `latestPrice`, `latestStore`, `latestDate`, `latestUnit`, `priceHistory[]`.
+- **ExtractedData:** `items[]` (name, quantity, unitPrice?, totalPrice, unit?), `total`, `storeNameScanned?`, `receiptDate?`, `subtotal?`, `tax?`.
+- **ProcessedItem** (items catalog): `name`, `normalizedName`, `latestPrice` ($/base-unit), `latestStore`, `latestDate`, `latestBaseUnit`, `dimension`, `dimensions[]`, `priceHistory[]`.
+- **ItemMapping** (learned association): `normalizedRaw`, `rawName`, `canonicalName`, `createdAt`, `updatedAt`.
 
 ---
 
@@ -184,22 +202,24 @@ The following journeys describe how a volunteer (or staff) uses the app in a com
 
 | Endpoint               | Methods                  | Purpose                                                                                            |
 | ---------------------- | ------------------------ | -------------------------------------------------------------------------------------------------- |
-| `/api/process-receipt` | POST                     | Upload file (image/PDF); returns extracted receipt data via Gemini. `maxDuration: 60`.             |
+| `/api/process-receipt` | POST                     | Upload file (image/PDF); returns extracted receipt data via the active AI provider. `maxDuration: 60`. |
 | `/api/receipts`        | GET, POST, PATCH, DELETE  | CRUD receipts. GET supports `?action=export&format=json` or `format=csv` for download.               |
 | `/api/stores`          | GET, POST, DELETE, PUT   | List, add, delete store; PUT replaces full list (e.g. reset).                                      |
 | `/api/units`           | GET, POST, DELETE, PUT   | List, add, delete unit; GET `?action=discover` merges units from receipts; PUT replaces full list.  |
+| `/api/settings`        | GET, PUT                 | Read / update app settings (active AI provider); PUT body `{ aiProvider }`, validated.              |
+| `/api/mappings`        | GET, POST, DELETE, PUT   | List / upsert (`{ rawName, canonicalName }`) / delete (`?normalizedRaw=`) / replace-all learned item mappings. |
+| `/api/ai-mappings`     | POST                     | AI-suggested canonical mappings for a batch of raw names (read-only; returns suggestions). `maxDuration: 60`. |
 
 ---
 
 ## 7. Navigation and layout
 
-- **Layout:** `ClientLayout` wraps the app with a **sidebar** and mobile **hamburger menu**. Navigation links: Home, Items, Insights, Receipt History, Settings.
-- **Routing:** App Router with `app/page.tsx` (home), `app/history/page.tsx`, `app/items/page.tsx`, `app/items/[name]/page.tsx`, `app/insights/page.tsx`, `app/settings/page.tsx`.
+- **Layout:** `ClientLayout` wraps the app with a **sidebar** and mobile **hamburger menu**. Navigation links: Home, Items, Mappings, Insights, Receipt History, Settings.
+- **Routing:** App Router with `app/page.tsx` (home), `app/history/page.tsx`, `app/items/page.tsx`, `app/items/[name]/page.tsx`, `app/insights/page.tsx`, `app/mappings/page.tsx`, `app/settings/page.tsx`.
 
 ---
 
 ## 8. Out of scope / limitations (for PRD clarity)
 
 - **No authentication:** Single-tenant; anyone with access to the server sees the same data.
-- **Storage:** File-based JSON only; no database.
-- **README inaccuracy:** README says "Local Storage"; actual persistence is **server-side file storage** in `data/`.
+- **Storage:** File-based JSON only; no database. Persistence is **server-side file storage** in `data/` (not browser storage).

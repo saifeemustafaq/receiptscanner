@@ -1,28 +1,33 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Trash2 } from 'lucide-react';
+import { Trash2, AlertTriangle } from 'lucide-react';
 import Card from './Card';
 import Button from './Button';
 import Input from './Input';
+import { PROVIDER_OPTIONS, type AIProvider } from '@/lib/hooks/useSettings';
+import type { MutationResult } from '@/lib/types';
 
 interface SettingsProps {
   stores: string[];
-  onAddStore: (store: string) => void;
-  onDeleteStore: (store: string) => void;
+  onAddStore: (store: string) => Promise<MutationResult>;
+  onDeleteStore: (store: string) => Promise<MutationResult>;
   units: string[];
-  onAddUnit: (unit: string) => void;
-  onDeleteUnit: (unit: string) => void;
+  onAddUnit: (unit: string) => Promise<MutationResult>;
+  onDeleteUnit: (unit: string) => Promise<MutationResult>;
   onClearAllData: () => void;
+  aiProvider: AIProvider;
+  onChangeProvider: (provider: AIProvider) => void;
 }
 
-export default function Settings({ stores, onAddStore, onDeleteStore, units, onAddUnit, onDeleteUnit, onClearAllData }: SettingsProps) {
+export default function Settings({ stores, onAddStore, onDeleteStore, units, onAddUnit, onDeleteUnit, onClearAllData, aiProvider, onChangeProvider }: SettingsProps) {
+  const activeProvider = PROVIDER_OPTIONS.find(p => p.id === aiProvider);
   const [newStore, setNewStore] = useState('');
   const [newUnit, setNewUnit] = useState('');
   const [error, setError] = useState('');
   const [unitError, setUnitError] = useState('');
 
-  const handleAddStore = () => {
+  const handleAddStore = async () => {
     if (!newStore.trim()) {
       setError('Store name cannot be empty');
       return;
@@ -33,12 +38,16 @@ export default function Settings({ stores, onAddStore, onDeleteStore, units, onA
       return;
     }
 
-    onAddStore(newStore.trim());
+    const result = await onAddStore(newStore.trim());
+    if (!result.success) {
+      setError(result.error || 'Failed to add store');
+      return;
+    }
     setNewStore('');
     setError('');
   };
 
-  const handleAddUnit = () => {
+  const handleAddUnit = async () => {
     if (!newUnit.trim()) {
       setUnitError('Unit cannot be empty');
       return;
@@ -50,7 +59,11 @@ export default function Settings({ stores, onAddStore, onDeleteStore, units, onA
       return;
     }
 
-    onAddUnit(trimmed);
+    const result = await onAddUnit(trimmed);
+    if (!result.success) {
+      setUnitError(result.error || 'Failed to add unit');
+      return;
+    }
     setNewUnit('');
     setUnitError('');
   };
@@ -73,6 +86,56 @@ export default function Settings({ stores, onAddStore, onDeleteStore, units, onA
       </header>
 
       <div className="content-section">
+        {/* AI Provider */}
+        <Card>
+          <h2 className="card-title">AI Provider</h2>
+
+          <div className="flex flex-col gap-base">
+            <p style={{ color: 'var(--black-secondary)', fontSize: '14px' }}>
+              Choose which AI model is used to scan and extract receipt data. Only one provider is active at a time.
+            </p>
+
+            <div className="flex flex-col gap-sm">
+              {PROVIDER_OPTIONS.map(option => {
+                const isSelected = aiProvider === option.id;
+                return (
+                  <label
+                    key={option.id}
+                    htmlFor={`provider-${option.id}`}
+                    className="flex items-center gap-md"
+                    style={{
+                      padding: '16px',
+                      backgroundColor: 'var(--ivory-bg)',
+                      border: `2px solid ${isSelected ? 'var(--black-text)' : 'var(--ivory-border)'}`,
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <input
+                      type="radio"
+                      id={`provider-${option.id}`}
+                      name="ai-provider"
+                      value={option.id}
+                      checked={isSelected}
+                      onChange={() => onChangeProvider(option.id)}
+                      style={{ width: '18px', height: '18px', cursor: 'pointer', flexShrink: 0 }}
+                    />
+                    <div className="flex flex-col" style={{ gap: '2px' }}>
+                      <span style={{ fontWeight: 600, fontSize: '15px' }}>{option.label}</span>
+                      <span style={{ fontSize: '13px', color: 'var(--black-secondary)' }}>
+                        Model: {option.model}
+                      </span>
+                      <span style={{ fontSize: '12px', color: 'var(--black-secondary)' }}>
+                        {option.description}
+                      </span>
+                    </div>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+        </Card>
+
         {/* Store Management */}
         <Card>
           <h2 className="card-title">Manage Stores</h2>
@@ -125,9 +188,12 @@ export default function Settings({ stores, onAddStore, onDeleteStore, units, onA
                     <span>{store}</span>
                     <button
                       className="btn btn-danger"
-                      onClick={() => {
+                      onClick={async () => {
                         if (confirm(`Delete "${store}" from your store list?`)) {
-                          onDeleteStore(store);
+                          const result = await onDeleteStore(store);
+                          if (!result.success) {
+                            alert('Failed to delete store: ' + (result.error || 'Unknown error'));
+                          }
                         }
                       }}
                       style={{ padding: '6px 12px', fontSize: '14px' }}
@@ -194,9 +260,12 @@ export default function Settings({ stores, onAddStore, onDeleteStore, units, onA
                     <span style={{ fontWeight: 500 }}>{unit}</span>
                     <button
                       className="btn btn-danger"
-                      onClick={() => {
+                      onClick={async () => {
                         if (confirm(`Delete unit "${unit}"? This will not affect existing receipts.`)) {
-                          onDeleteUnit(unit);
+                          const result = await onDeleteUnit(unit);
+                          if (!result.success) {
+                            alert('Failed to delete unit: ' + (result.error || 'Unknown error'));
+                          }
                         }
                       }}
                       style={{ padding: '4px 8px', fontSize: '12px' }}
@@ -217,17 +286,18 @@ export default function Settings({ stores, onAddStore, onDeleteStore, units, onA
           
           <div className="flex flex-col gap-base">
             <p style={{ color: 'var(--black-secondary)', fontSize: '14px' }}>
-              All data is stored locally in your browser's localStorage
+              All data is stored server-side in JSON files within the app&rsquo;s data directory
             </p>
 
             <div style={{
               padding: '16px',
-              backgroundColor: '#fff3cd',
-              border: '2px solid #ffc107',
+              backgroundColor: 'var(--warning-bg)',
+              border: '2px solid var(--warning-border)',
               borderRadius: '4px'
             }}>
-              <p style={{ fontSize: '14px', fontWeight: 600, marginBottom: '4px' }}>
-                ⚠️ Warning: Dangerous Action
+              <p style={{ fontSize: '14px', fontWeight: 600, marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <AlertTriangle size={16} />
+                Warning: Dangerous Action
               </p>
               <p style={{ fontSize: '14px', color: 'var(--black-secondary)' }}>
                 Clearing all data will permanently delete all receipts and settings. This cannot be undone.
@@ -246,8 +316,9 @@ export default function Settings({ stores, onAddStore, onDeleteStore, units, onA
           <h2 className="card-title">About</h2>
           <div className="flex flex-col gap-sm" style={{ fontSize: '14px' }}>
             <p><strong>Version:</strong> 1.0.0</p>
-            <p><strong>Storage:</strong> Browser localStorage</p>
-            <p><strong>AI Model:</strong> Google Gemini 1.5 Flash</p>
+            <p><strong>Storage:</strong> Server-side JSON files</p>
+            <p><strong>AI Provider:</strong> {activeProvider?.label ?? aiProvider}</p>
+            <p><strong>AI Model:</strong> {activeProvider?.model ?? '—'}</p>
           </div>
         </Card>
       </div>

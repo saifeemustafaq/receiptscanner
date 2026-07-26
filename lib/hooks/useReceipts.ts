@@ -5,12 +5,12 @@ import { SavedReceipt } from '@/lib/types';
 
 export function useReceipts() {
   const [receipts, setReceipts] = useState<SavedReceipt[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const loadReceipts = async () => {
     try {
-      setLoading(true);
+      setIsLoading(true);
       const response = await fetch('/api/receipts');
       const data = await response.json();
       if (data.success) {
@@ -22,7 +22,7 @@ export function useReceipts() {
       console.error('Error loading receipts:', error);
       setError('Failed to load receipts');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -50,7 +50,7 @@ export function useReceipts() {
     }
   };
 
-  const updateReceipt = async (id: string, updates: any) => {
+  const updateReceipt = async (id: string, updates: Partial<SavedReceipt>) => {
     try {
       const response = await fetch('/api/receipts', {
         method: 'PATCH',
@@ -95,7 +95,7 @@ export function useReceipts() {
 
   return {
     receipts,
-    loading,
+    isLoading,
     error,
     loadReceipts,
     deleteReceipt,

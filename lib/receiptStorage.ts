@@ -11,7 +11,7 @@ export function getReceiptsDataDir(): string {
 /**
  * Ensure data directory exists
  */
-export function ensureDataDirExists(): void {
+export function ensureReceiptsDataDirExists(): void {
   const dir = getReceiptsDataDir();
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
@@ -22,7 +22,7 @@ export function ensureDataDirExists(): void {
  * Get all receipts from JSON file
  */
 export function getAllReceipts(): any[] {
-  ensureDataDirExists();
+  ensureReceiptsDataDirExists();
   const filePath = path.join(getReceiptsDataDir(), 'receipts_data.json');
   
   if (!fs.existsSync(filePath)) {
@@ -42,7 +42,7 @@ export function getAllReceipts(): any[] {
  * Save a new receipt
  */
 export function saveReceipt(receipt: any): boolean {
-  ensureDataDirExists();
+  ensureReceiptsDataDirExists();
   const filePath = path.join(getReceiptsDataDir(), 'receipts_data.json');
   
   try {
@@ -62,7 +62,7 @@ export function saveReceipt(receipt: any): boolean {
  * Update an existing receipt
  */
 export function updateReceipt(receiptId: string, updates: any): boolean {
-  ensureDataDirExists();
+  ensureReceiptsDataDirExists();
   const filePath = path.join(getReceiptsDataDir(), 'receipts_data.json');
   
   try {
@@ -90,7 +90,7 @@ export function updateReceipt(receiptId: string, updates: any): boolean {
  * Delete a receipt
  */
 export function deleteReceipt(receiptId: string): boolean {
-  ensureDataDirExists();
+  ensureReceiptsDataDirExists();
   const filePath = path.join(getReceiptsDataDir(), 'receipts_data.json');
   
   try {
@@ -112,18 +112,31 @@ export function deleteReceipt(receiptId: string): boolean {
 }
 
 /**
+ * Escape a single CSV field per RFC 4180: wrap in double quotes and double any
+ * embedded quotes when the value contains a comma, quote, or newline. Without
+ * this, a store name like `Trader Joe's, SF` would spill across columns.
+ */
+function escapeCsvField(value: unknown): string {
+  const str = value == null ? '' : String(value);
+  if (/[",\n\r]/.test(str)) {
+    return `"${str.replace(/"/g, '""')}"`;
+  }
+  return str;
+}
+
+/**
  * Export receipts to a file
  */
 export function exportReceipts(format: 'json' | 'csv' = 'json'): string {
   const allReceipts = getAllReceipts();
-  
+
   if (format === 'json') {
     return JSON.stringify(allReceipts, null, 2);
   }
-  
-  // CSV format (basic implementation)
+
+  // CSV format (RFC 4180 field escaping)
   if (allReceipts.length === 0) return '';
-  
+
   const headers = ['ID', 'Store', 'Billing Date', 'Upload Date', 'Total', 'Items Count'];
   const rows = allReceipts.map((r: any) => [
     r.id,
@@ -133,7 +146,9 @@ export function exportReceipts(format: 'json' | 'csv' = 'json'): string {
     r.extractedData.total,
     r.extractedData.items.length
   ]);
-  
-  return [headers, ...rows].map(row => row.join(',')).join('\n');
+
+  return [headers, ...rows]
+    .map(row => row.map(escapeCsvField).join(','))
+    .join('\n');
 }
 

@@ -703,13 +703,15 @@ Design components to easily consume:
 
 ## Implementation Guidelines
 
+> **Reconcile note (matches actual code):** this section is aspirational template text. The receiptscanner codebase does **not** use CSS Modules. In practice it uses **Tailwind CSS 4 + CSS variables and global utility/component classes in `app/globals.css`, plus inline styles** in components. There is no `tailwind.config.ts` (v4 is CSS-driven). Follow the code and `DEVELOPER_GUIDE.md §17`, not the CSS-Modules snippet below. (Semantic accent colors — red/blue/orange — are available as `--error-*`, `--info-main`, and `--warning-*` tokens in `globals.css`.)
+
 ### CSS Approach
-**Use CSS Modules** for component styling:
+The project uses global classes + CSS variables (not CSS Modules). Reference tokens with `var(--…)`:
 ```css
-/* Component.module.css */
+/* app/globals.css */
 .card {
   background: var(--ivory-card);
-  border: 2px solid var(--black);
+  border: 2px solid var(--black-text);
   border-radius: 4px;
 }
 ```

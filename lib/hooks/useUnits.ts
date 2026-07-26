@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-
-const DEFAULT_UNITS = ['g', 'kg', 'oz', 'lb', 'lbs', 'ml', 'l', 'ea', 'pcs', 'ct'];
+import { DEFAULT_UNITS } from '@/lib/defaults';
+import type { MutationResult } from '@/lib/types';
 
 export function useUnits() {
   const [units, setUnits] = useState<string[]>([]);
@@ -52,13 +52,13 @@ export function useUnits() {
     }
   };
 
-  const addUnit = async (unit: string) => {
+  const addUnit = async (unit: string): Promise<MutationResult> => {
     const trimmed = unit.trim().toLowerCase();
-    if (!trimmed) return;
+    if (!trimmed) return { success: false, error: 'Unit cannot be empty' };
     
     // Check if unit already exists locally
     if (units.includes(trimmed)) {
-      return; // Already exists
+      return { success: false, error: 'This unit already exists' };
     }
     
     try {
@@ -74,15 +74,17 @@ export function useUnits() {
       
       if (data.success && Array.isArray(data.units)) {
         setUnits(data.units);
-      } else {
-        console.error('Failed to add unit:', data.error);
+        return { success: true };
       }
+      console.error('Failed to add unit:', data.error);
+      return { success: false, error: data.error || 'Failed to add unit' };
     } catch (error) {
       console.error('Error adding unit:', error);
+      return { success: false, error: 'Failed to add unit' };
     }
   };
 
-  const deleteUnit = async (unit: string) => {
+  const deleteUnit = async (unit: string): Promise<MutationResult> => {
     try {
       const response = await fetch(`/api/units?unit=${encodeURIComponent(unit)}`, {
         method: 'DELETE',
@@ -92,15 +94,17 @@ export function useUnits() {
       
       if (data.success && Array.isArray(data.units)) {
         setUnits(data.units);
-      } else {
-        console.error('Failed to delete unit:', data.error);
+        return { success: true };
       }
+      console.error('Failed to delete unit:', data.error);
+      return { success: false, error: data.error || 'Failed to delete unit' };
     } catch (error) {
       console.error('Error deleting unit:', error);
+      return { success: false, error: 'Failed to delete unit' };
     }
   };
 
-  const clearAll = async () => {
+  const clearAll = async (): Promise<MutationResult> => {
     try {
       // Reset to default units by saving them
       const response = await fetch('/api/units', {
@@ -115,10 +119,14 @@ export function useUnits() {
       
       if (data.success && Array.isArray(data.units)) {
         setUnits(data.units);
+        return { success: true };
       }
+      console.error('Failed to clear units:', data.error);
+      return { success: false, error: data.error || 'Failed to clear units' };
     } catch (error) {
       console.error('Error clearing units:', error);
       setUnits(DEFAULT_UNITS);
+      return { success: false, error: 'Failed to clear units' };
     }
   };
 

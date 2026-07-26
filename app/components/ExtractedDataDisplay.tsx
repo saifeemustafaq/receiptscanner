@@ -1,23 +1,14 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { CheckCircle, AlertCircle, Loader, Check, X } from 'lucide-react';
+import React, { useState } from 'react';
+import { CheckCircle, AlertCircle, AlertTriangle, Loader, Check, X } from 'lucide-react';
 import EditableItemName from './EditableItemName';
-
-export interface ReceiptItem {
-  name: string;
-  quantity: number;
-  unitPrice?: number;
-  totalPrice: number;
-  unit?: string;
-}
-
-export interface ExtractedData {
-  items: ReceiptItem[];
-  total: number;
-  storeNameScanned?: string;
-  receiptDate?: string; // Date extracted from receipt (YYYY-MM-DD)
-}
+import ItemMappingControl from './ItemMappingControl';
+import type { ReceiptItem, ExtractedData, MutationResult } from '@/lib/types';
+import type { ItemMapping } from '@/lib/itemMappings';
+import { displayUnitPrice } from '@/lib/measure';
+import { DEFAULT_UNIT } from '@/lib/defaults';
+import { validateLineItem, validateReceiptTotals, totalsBreakdown } from '@/lib/receiptMath';
 
 interface ExtractedDataDisplayProps {
   data: ExtractedData | null;
@@ -25,7 +16,10 @@ interface ExtractedDataDisplayProps {
   error: string | null;
   existingItemNames?: string[]; // For autocomplete suggestions
   units?: string[]; // Available units for dropdown
+  mappings?: ItemMapping[]; // Learned raw -> canonical associations
   onItemChange?: (index: number, updatedItem: ReceiptItem) => void;
+  onMapItem?: (rawName: string, canonicalName: string) => Promise<MutationResult>;
+  onUnmapItem?: (normalizedRaw: string) => Promise<MutationResult>;
 }
 
 export default function ExtractedDataDisplay({ 
@@ -34,18 +28,23 @@ export default function ExtractedDataDisplay({
   error,
   existingItemNames = [],
   units = [],
+  mappings = [],
   onItemChange,
+  onMapItem,
+  onUnmapItem,
 }: ExtractedDataDisplayProps) {
-  const [editedItems, setEditedItems] = useState<ReceiptItem[]>([]);
+  const [editedItems, setEditedItems] = useState<ReceiptItem[]>(data?.items ?? []);
   const [editingField, setEditingField] = useState<{index: number, field: string} | null>(null);
-  const [tempValue, setTempValue] = useState<any>('');
+  const [tempValue, setTempValue] = useState<string | number | null>('');
 
-  // Initialize edited items when data changes
-  useEffect(() => {
-    if (data?.items) {
-      setEditedItems(data.items);
-    }
-  }, [data]);
+  // Re-sync the local editable copy whenever a new receipt (`data`) arrives.
+  // Adjusting state during render (rather than in an effect) is the React-
+  // recommended way to derive state from a changing prop.
+  const [syncedData, setSyncedData] = useState(data);
+  if (data !== syncedData) {
+    setSyncedData(data);
+    setEditedItems(data?.items ?? []);
+  }
 
   const handleItemNameChange = (index: number, newName: string) => {
     const updatedItems = [...editedItems];
@@ -57,9 +56,9 @@ export default function ExtractedDataDisplay({
     }
   };
 
-  const startEditing = (index: number, field: string, currentValue: any) => {
+  const startEditing = (index: number, field: string, currentValue: string | number | null | undefined) => {
     setEditingField({ index, field });
-    setTempValue(currentValue);
+    setTempValue(currentValue ?? '');
   };
 
   const cancelEditing = () => {
@@ -72,16 +71,10 @@ export default function ExtractedDataDisplay({
     
     const { index, field } = editingField;
     const updatedItems = [...editedItems];
-    
-    // Handle unit field - allow empty string to set to null
-    if (field === 'unit') {
-      updatedItems[index] = { 
-        ...updatedItems[index], 
-        unit: tempValue === '' || tempValue === null ? null : tempValue 
-      };
-    } else {
-      updatedItems[index] = { ...updatedItems[index], [field]: tempValue };
-    }
+
+    // Unit is committed via commitUnit (inline dropdown), so this path only
+    // handles the numeric fields (quantity / unitPrice / totalPrice).
+    updatedItems[index] = { ...updatedItems[index], [field]: tempValue };
     
     // Auto-calculate totalPrice if quantity or unitPrice changes
     const item = updatedItems[index];
@@ -110,6 +103,57 @@ export default function ExtractedDataDisplay({
       cancelEditing();
     }
   };
+
+  // Unit is edited via an always-visible inline dropdown (no click-to-edit, no
+  // confirm step): picking an option commits immediately. Empty => null.
+  const commitUnit = (index: number, rawValue: string) => {
+    const updatedItems = [...editedItems];
+    updatedItems[index] = { ...updatedItems[index], unit: rawValue === '' ? null : rawValue };
+    setEditedItems(updatedItems);
+    onItemChange?.(index, updatedItems[index]);
+  };
+
+  const renderUnitSelect = (index: number, item: ReceiptItem, width = '90px') => {
+    // Default to "each" when nothing was printed, and keep an out-of-list unit
+    // selectable so it isn't silently dropped.
+    const currentUnit = item.unit || DEFAULT_UNIT;
+    const options = units.includes(currentUnit) ? units : [currentUnit, ...units];
+    return (
+      <select
+        value={currentUnit}
+        onChange={(e) => commitUnit(index, e.target.value)}
+        title="Select unit"
+        style={{
+          width,
+          padding: '6px 8px',
+          fontSize: '12px',
+          border: '1px solid var(--black-tertiary)',
+          borderRadius: '4px',
+          backgroundColor: 'var(--ivory-bg)',
+          color: 'var(--black-text)',
+          cursor: 'pointer',
+        }}
+      >
+        {options.map(unit => (
+          <option key={unit} value={unit}>{unit}</option>
+        ))}
+      </select>
+    );
+  };
+
+  // Non-blocking receipt-math validation, derived from the live editable copy
+  // so a warning clears the instant the user corrects the number. Never blocks
+  // saving (DEVELOPER_GUIDE §15 — inline messaging).
+  const lineWarnings: Record<number, NonNullable<ReturnType<typeof validateLineItem>>> = {};
+  editedItems.forEach((item, i) => {
+    const result = validateLineItem(item);
+    if (result && !result.ok) lineWarnings[i] = result;
+  });
+  const totalsFindings = data ? validateReceiptTotals({ ...data, items: editedItems }) : [];
+  // Subtotal / tax / service-delivery-bag fees printed on the receipt, so extra
+  // charges are visible above the grand total instead of vanishing into it.
+  const breakdownRows = data ? totalsBreakdown(data) : [];
+
   return (
     <div>
       <h3 style={{
@@ -131,7 +175,7 @@ export default function ExtractedDataDisplay({
       {error && (
         <div className="flex items-center gap-md" style={{
           padding: '16px',
-          backgroundColor: '#ffebee',
+          backgroundColor: 'var(--error-pale)',
           border: '2px solid var(--error-bg)',
           borderRadius: '4px'
         }}>
@@ -235,81 +279,50 @@ export default function ExtractedDataDisplay({
                           onChange={(newName) => handleItemNameChange(index, newName)}
                           suggestions={existingItemNames}
                         />
+                        {onMapItem && (
+                          <ItemMappingControl
+                            rawName={item.name}
+                            mappings={mappings}
+                            suggestions={existingItemNames}
+                            onMap={onMapItem}
+                            onUnmap={onUnmapItem}
+                          />
+                        )}
+                        {lineWarnings[index] && (
+                          <div title={lineWarnings[index].message} style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '6px', color: 'var(--error-text)', fontSize: '12px' }}>
+                            <AlertTriangle size={14} style={{ flexShrink: 0 }} />
+                            <span>Doesn&apos;t match qty × unit price (expected ${lineWarnings[index].expected.toFixed(2)})</span>
+                          </div>
+                        )}
                       </td>
                       <td style={{ padding: '16px', textAlign: 'right', verticalAlign: 'middle' }}>
-                        {editingField?.index === index && editingField?.field === 'quantity' ? (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end' }}>
-                            <input
-                              type="number"
-                              value={tempValue}
-                              onChange={(e) => setTempValue(parseFloat(e.target.value) || 0)}
-                              onKeyDown={handleFieldKeyDown}
-                              autoFocus
-                              step="0.01"
-                              style={{
-                                width: '70px',
-                                padding: '6px 8px',
-                                fontSize: '14px',
-                                border: '2px solid var(--golden-main)',
-                                borderRadius: '4px',
-                                textAlign: 'right',
-                              }}
-                            />
-                            <span 
-                              onClick={() => startEditing(index, 'unit', item.unit || '')}
-                              style={{ 
-                                minWidth: '30px', 
-                                fontSize: '12px',
-                                cursor: 'pointer',
-                                padding: '2px 4px',
-                                borderRadius: '4px'
-                              }}
-                              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--ivory-darker)'}
-                              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                              title="Click to edit unit"
-                            >
-                              {item.unit || ''}
-                            </span>
-                            <button onClick={saveFieldEdit} style={{ padding: '4px', cursor: 'pointer', background: 'none', border: 'none' }}>
-                              <Check size={16} color="var(--green-main)" />
-                            </button>
-                            <button onClick={cancelEditing} style={{ padding: '4px', cursor: 'pointer', background: 'none', border: 'none' }}>
-                              <X size={16} color="var(--error-text)" />
-                            </button>
-                          </div>
-                        ) : editingField?.index === index && editingField?.field === 'unit' ? (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end' }}>
-                            <span style={{ fontSize: '14px' }}>{item.quantity || '-'}</span>
-                            <select
-                              value={tempValue || ''}
-                              onChange={(e) => setTempValue(e.target.value)}
-                              onKeyDown={handleFieldKeyDown}
-                              autoFocus
-                              style={{
-                                width: '80px',
-                                padding: '6px 8px',
-                                fontSize: '14px',
-                                border: '2px solid var(--golden-main)',
-                                borderRadius: '4px',
-                                cursor: 'pointer',
-                              }}
-                            >
-                              <option value="">(no unit)</option>
-                              {units.map(unit => (
-                                <option key={unit} value={unit}>
-                                  {unit}
-                                </option>
-                              ))}
-                            </select>
-                            <button onClick={saveFieldEdit} style={{ padding: '4px', cursor: 'pointer', background: 'none', border: 'none' }}>
-                              <Check size={16} color="var(--green-main)" />
-                            </button>
-                            <button onClick={cancelEditing} style={{ padding: '4px', cursor: 'pointer', background: 'none', border: 'none' }}>
-                              <X size={16} color="var(--error-text)" />
-                            </button>
-                          </div>
-                        ) : (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end' }}>
+                          {editingField?.index === index && editingField?.field === 'quantity' ? (
+                            <>
+                              <input
+                                type="number"
+                                value={tempValue ?? ''}
+                                onChange={(e) => setTempValue(parseFloat(e.target.value) || 0)}
+                                onKeyDown={handleFieldKeyDown}
+                                autoFocus
+                                step="0.01"
+                                style={{
+                                  width: '70px',
+                                  padding: '6px 8px',
+                                  fontSize: '14px',
+                                  border: '2px solid var(--golden-main)',
+                                  borderRadius: '4px',
+                                  textAlign: 'right',
+                                }}
+                              />
+                              <button onClick={saveFieldEdit} style={{ padding: '4px', cursor: 'pointer', background: 'none', border: 'none' }}>
+                                <Check size={16} color="var(--green-main)" />
+                              </button>
+                              <button onClick={cancelEditing} style={{ padding: '4px', cursor: 'pointer', background: 'none', border: 'none' }}>
+                                <X size={16} color="var(--error-text)" />
+                              </button>
+                            </>
+                          ) : (
                             <span
                               onClick={() => startEditing(index, 'quantity', item.quantity)}
                               style={{ cursor: 'pointer', padding: '4px 8px', borderRadius: '4px' }}
@@ -318,30 +331,16 @@ export default function ExtractedDataDisplay({
                             >
                               {item.quantity || '-'}
                             </span>
-                            <span
-                              onClick={() => startEditing(index, 'unit', item.unit || '')}
-                              style={{ 
-                                cursor: 'pointer', 
-                                padding: '4px 8px', 
-                                borderRadius: '4px',
-                                fontSize: '12px',
-                                color: item.unit ? 'var(--black-text)' : 'var(--black-tertiary)'
-                              }}
-                              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--ivory-darker)'}
-                              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                              title="Click to edit unit"
-                            >
-                              {item.unit || '(no unit)'}
-                            </span>
-                          </div>
-                        )}
+                          )}
+                          {renderUnitSelect(index, item, '84px')}
+                        </div>
                       </td>
                       <td style={{ padding: '16px', textAlign: 'right', verticalAlign: 'middle' }}>
                         {editingField?.index === index && editingField?.field === 'unitPrice' ? (
                           <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end' }}>
                             <input
                               type="number"
-                              value={tempValue}
+                              value={tempValue ?? ''}
                               onChange={(e) => setTempValue(parseFloat(e.target.value) || 0)}
                               onKeyDown={handleFieldKeyDown}
                               autoFocus
@@ -370,7 +369,7 @@ export default function ExtractedDataDisplay({
                             onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--ivory-darker)'}
                             onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                           >
-                            {item.unitPrice ? `$${item.unitPrice.toFixed(2)}` : '-'}
+                            {(() => { const dp = displayUnitPrice(item); return dp != null ? `$${dp.toFixed(2)}` : '-'; })()}
                           </span>
                         )}
                       </td>
@@ -379,7 +378,7 @@ export default function ExtractedDataDisplay({
                           <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end' }}>
                             <input
                               type="number"
-                              value={tempValue}
+                              value={tempValue ?? ''}
                               onChange={(e) => setTempValue(parseFloat(e.target.value) || 0)}
                               onKeyDown={handleFieldKeyDown}
                               autoFocus
@@ -417,6 +416,12 @@ export default function ExtractedDataDisplay({
                   ))}
                 </tbody>
                 <tfoot>
+                  {breakdownRows.map((row, i) => (
+                    <tr key={i} style={{ borderTop: i === 0 ? '2px solid var(--black-text)' : 'none' }}>
+                      <td colSpan={3} style={{ padding: '8px 16px', textAlign: 'right', fontSize: '14px', color: 'var(--black-secondary)' }}>{row.label}:</td>
+                      <td style={{ padding: '8px 16px', textAlign: 'right', fontSize: '14px', color: 'var(--black-secondary)' }}>${row.amount.toFixed(2)}</td>
+                    </tr>
+                  ))}
                   <tr style={{
                     backgroundColor: 'var(--green-pale)',
                     borderTop: '2px solid var(--black-text)'
@@ -463,6 +468,21 @@ export default function ExtractedDataDisplay({
                         onChange={(newName) => handleItemNameChange(index, newName)}
                         suggestions={existingItemNames}
                       />
+                      {onMapItem && (
+                        <ItemMappingControl
+                          rawName={item.name}
+                          mappings={mappings}
+                          suggestions={existingItemNames}
+                          onMap={onMapItem}
+                          onUnmap={onUnmapItem}
+                        />
+                      )}
+                      {lineWarnings[index] && (
+                        <div title={lineWarnings[index].message} style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '6px', color: 'var(--error-text)', fontSize: '12px' }}>
+                          <AlertTriangle size={14} style={{ flexShrink: 0 }} />
+                          <span>Doesn&apos;t match qty × unit price (expected ${lineWarnings[index].expected.toFixed(2)})</span>
+                        </div>
+                      )}
                     </div>
                     
                     <div style={{ marginBottom: '8px' }}>
@@ -473,41 +493,43 @@ export default function ExtractedDataDisplay({
                         color: 'var(--black-secondary)',
                         marginBottom: '4px'
                       }}>
-                        Quantity
+                        Quantity &amp; Unit
                       </label>
-                      {editingField?.index === index && editingField?.field === 'quantity' ? (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <input
-                            type="number"
-                            value={tempValue}
-                            onChange={(e) => setTempValue(parseFloat(e.target.value) || 0)}
-                            onKeyDown={handleFieldKeyDown}
-                            autoFocus
-                            step="0.01"
-                            style={{
-                              flex: 1,
-                              padding: '8px',
-                              fontSize: '14px',
-                              border: '2px solid var(--golden-main)',
-                              borderRadius: '4px',
-                            }}
-                          />
-                          <span style={{ fontSize: '12px' }}>{item.unit || ''}</span>
-                          <button onClick={saveFieldEdit} style={{ padding: '4px', cursor: 'pointer', background: 'none', border: 'none' }}>
-                            <Check size={16} color="var(--green-main)" />
-                          </button>
-                          <button onClick={cancelEditing} style={{ padding: '4px', cursor: 'pointer', background: 'none', border: 'none' }}>
-                            <X size={16} color="var(--error-text)" />
-                          </button>
-                        </div>
-                      ) : (
-                        <div
-                          onClick={() => startEditing(index, 'quantity', item.quantity)}
-                          style={{ cursor: 'pointer', padding: '8px', borderRadius: '4px', backgroundColor: 'var(--ivory-bg)' }}
-                        >
-                          {item.quantity || '-'} {item.unit || ''}
-                        </div>
-                      )}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        {editingField?.index === index && editingField?.field === 'quantity' ? (
+                          <>
+                            <input
+                              type="number"
+                              value={tempValue ?? ''}
+                              onChange={(e) => setTempValue(parseFloat(e.target.value) || 0)}
+                              onKeyDown={handleFieldKeyDown}
+                              autoFocus
+                              step="0.01"
+                              style={{
+                                flex: 1,
+                                padding: '8px',
+                                fontSize: '14px',
+                                border: '2px solid var(--golden-main)',
+                                borderRadius: '4px',
+                              }}
+                            />
+                            <button onClick={saveFieldEdit} style={{ padding: '4px', cursor: 'pointer', background: 'none', border: 'none' }}>
+                              <Check size={16} color="var(--green-main)" />
+                            </button>
+                            <button onClick={cancelEditing} style={{ padding: '4px', cursor: 'pointer', background: 'none', border: 'none' }}>
+                              <X size={16} color="var(--error-text)" />
+                            </button>
+                          </>
+                        ) : (
+                          <div
+                            onClick={() => startEditing(index, 'quantity', item.quantity)}
+                            style={{ flex: 1, cursor: 'pointer', padding: '8px', borderRadius: '4px', backgroundColor: 'var(--ivory-bg)' }}
+                          >
+                            {item.quantity || '-'}
+                          </div>
+                        )}
+                        {renderUnitSelect(index, item, '120px')}
+                      </div>
                     </div>
                     
                     <div style={{ marginBottom: '8px' }}>
@@ -524,7 +546,7 @@ export default function ExtractedDataDisplay({
                         <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                           <input
                             type="number"
-                            value={tempValue}
+                            value={tempValue ?? ''}
                             onChange={(e) => setTempValue(parseFloat(e.target.value) || 0)}
                             onKeyDown={handleFieldKeyDown}
                             autoFocus
@@ -550,7 +572,7 @@ export default function ExtractedDataDisplay({
                           onClick={() => startEditing(index, 'unitPrice', item.unitPrice)}
                           style={{ cursor: 'pointer', padding: '8px', borderRadius: '4px', backgroundColor: 'var(--ivory-bg)' }}
                         >
-                          {item.unitPrice ? `$${item.unitPrice.toFixed(2)}` : '-'}
+                          {(() => { const dp = displayUnitPrice(item); return dp != null ? `$${dp.toFixed(2)}` : '-'; })()}
                         </div>
                       )}
                     </div>
@@ -569,7 +591,7 @@ export default function ExtractedDataDisplay({
                         <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                           <input
                             type="number"
-                            value={tempValue}
+                            value={tempValue ?? ''}
                             onChange={(e) => setTempValue(parseFloat(e.target.value) || 0)}
                             onKeyDown={handleFieldKeyDown}
                             autoFocus
@@ -602,6 +624,16 @@ export default function ExtractedDataDisplay({
                     </div>
                   </div>
                 ))}
+                {breakdownRows.length > 0 && (
+                  <div style={{ padding: '12px 16px', borderTop: '2px solid var(--black-text)' }}>
+                    {breakdownRows.map((row, i) => (
+                      <div key={i} className="flex justify-between" style={{ fontSize: '14px', color: 'var(--black-secondary)', marginBottom: '6px' }}>
+                        <span>{row.label}</span>
+                        <span>${row.amount.toFixed(2)}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
                 <div style={{
                   padding: '16px',
                   backgroundColor: 'var(--green-pale)',
@@ -615,6 +647,35 @@ export default function ExtractedDataDisplay({
               </div>
             </div>
           </div>
+
+          {/* Non-blocking receipt-math findings. Subtotal mismatches are shown
+              as warnings; unaccounted adjustments (fees/deposits/coupons) as a
+              neutral note. Saving is always allowed. */}
+          {totalsFindings.length > 0 && (
+            <div className="flex flex-col gap-sm">
+              {totalsFindings.map((finding, i) => {
+                const isNote = finding.kind === 'unaccounted-adjustments';
+                return (
+                  <div
+                    key={i}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: '8px',
+                      padding: '12px',
+                      borderRadius: '4px',
+                      backgroundColor: isNote ? 'var(--ivory-darker)' : 'var(--error-pale)',
+                      border: isNote ? '1px solid var(--ivory-border)' : '2px solid var(--error-bg)',
+                      color: isNote ? 'var(--black-secondary)' : 'var(--error-text)',
+                    }}
+                  >
+                    <AlertTriangle size={18} style={{ flexShrink: 0, marginTop: '1px' }} />
+                    <p style={{ fontSize: '13px', margin: 0 }}>{finding.message}</p>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 

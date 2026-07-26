@@ -3,7 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import { Search, ShoppingBag, ChevronRight } from 'lucide-react';
 import Card from './Card';
-import { ProcessedItem } from '@/lib/itemsProcessor';
+import { ProcessedItem, primaryDimensionHistory } from '@/lib/itemsProcessor';
 
 interface ItemsListProps {
   items: ProcessedItem[];
@@ -27,11 +27,12 @@ export default function ItemsList({ items, onItemClick }: ItemsListProps) {
   };
 
   const getPriceRange = (item: ProcessedItem) => {
-    const prices = item.priceHistory.map(entry => entry.price);
+    // Range within the primary dimension only — never mix $/lb with $/ea.
+    const prices = primaryDimensionHistory(item).map(entry => entry.price);
     const maxPrice = Math.max(...prices);
     const minPrice = Math.min(...prices);
     const isSamePrice = maxPrice === minPrice;
-    
+
     return { maxPrice, minPrice, isSamePrice };
   };
 
@@ -138,9 +139,9 @@ export default function ItemsList({ items, onItemClick }: ItemsListProps) {
                           <p style={{ 
                             fontSize: '28px', 
                             fontWeight: 700,
-                            color: '#2B5F8F',
+                            color: 'var(--info-main)',
                           }}>
-                            {formatPrice(maxPrice, item.latestUnit)}
+                            {formatPrice(maxPrice, item.latestBaseUnit)}
                           </p>
                         </div>
                       ) : (
@@ -158,9 +159,9 @@ export default function ItemsList({ items, onItemClick }: ItemsListProps) {
                             <p style={{ 
                               fontSize: '20px', 
                               fontWeight: 700,
-                              color: '#2D5016',
+                              color: 'var(--green-main)',
                             }}>
-                              {formatPrice(minPrice, item.latestUnit)}
+                              {formatPrice(minPrice, item.latestBaseUnit)}
                             </p>
                           </div>
                           <div style={{ 
@@ -181,9 +182,9 @@ export default function ItemsList({ items, onItemClick }: ItemsListProps) {
                             <p style={{ 
                               fontSize: '20px', 
                               fontWeight: 700,
-                              color: '#8B3A3A',
+                              color: 'var(--error-text)',
                             }}>
-                              {formatPrice(maxPrice, item.latestUnit)}
+                              {formatPrice(maxPrice, item.latestBaseUnit)}
                             </p>
                           </div>
                         </div>

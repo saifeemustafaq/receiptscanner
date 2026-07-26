@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Edit2, Check, X, Plus } from 'lucide-react';
 
 type Mode = 'display' | 'dropdown' | 'create';
@@ -21,7 +21,6 @@ export default function EditableItemName({
   const [mode, setMode] = useState<Mode>('display');
   const [searchTerm, setSearchTerm] = useState('');
   const [newItemName, setNewItemName] = useState('');
-  const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([]);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -33,24 +32,14 @@ export default function EditableItemName({
     s => s.toLowerCase().trim() === value.toLowerCase().trim()
   );
 
-  // Filter suggestions based on search term
-  useEffect(() => {
-    if (mode !== 'dropdown') {
-      setFilteredSuggestions([]);
-      return;
-    }
-
-    if (!searchTerm || searchTerm.trim() === '') {
-      setFilteredSuggestions(suggestions.slice(0, 10));
-    } else {
-      const term = searchTerm.toLowerCase().trim();
-      const filtered = suggestions
-        .filter(suggestion => 
-          suggestion.toLowerCase().includes(term)
-        )
-        .slice(0, 10);
-      setFilteredSuggestions(filtered);
-    }
+  // Suggestions shown in the dropdown, derived from the current search term.
+  const filteredSuggestions = useMemo(() => {
+    if (mode !== 'dropdown') return [];
+    if (!searchTerm || searchTerm.trim() === '') return suggestions.slice(0, 10);
+    const term = searchTerm.toLowerCase().trim();
+    return suggestions
+      .filter(suggestion => suggestion.toLowerCase().includes(term))
+      .slice(0, 10);
   }, [searchTerm, suggestions, mode]);
 
   // Focus appropriate input when mode changes
@@ -61,6 +50,13 @@ export default function EditableItemName({
       inputRef.current.focus();
     }
   }, [mode]);
+
+  const handleCancel = () => {
+    setMode('display');
+    setSearchTerm('');
+    setNewItemName('');
+    setHighlightedIndex(-1);
+  };
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -102,13 +98,6 @@ export default function EditableItemName({
       setMode('display');
       setNewItemName('');
     }
-  };
-
-  const handleCancel = () => {
-    setMode('display');
-    setSearchTerm('');
-    setNewItemName('');
-    setHighlightedIndex(-1);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -166,8 +155,13 @@ export default function EditableItemName({
               fontSize: '11px',
               color: 'var(--green-main)',
               fontWeight: 500,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '2px',
+              verticalAlign: 'middle',
             }}>
-              ✓ Existing
+              <Check size={12} />
+              Existing
             </span>
           )}
           {!isExistingItem && value && (
