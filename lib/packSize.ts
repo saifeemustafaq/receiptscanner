@@ -46,6 +46,14 @@ const MULTIPACK = new RegExp(
 // A single "<number><unit>" token, e.g. "226 G", "64oz", "1.5KG", "24 ct".
 const SIZE_TOKEN = new RegExp(`(\\d+(?:\\.\\d+)?)\\s*(${TOKEN_UNIT_ALT})(?![a-zA-Z])`, 'gi');
 
+// Standalone count/packaging words with NO number — "Ea", "Each", "Bunch",
+// "Bag", "Pk". These are pure GROUPING noise ("Mint Ea" is just "Mint"), so
+// deriveCoreName strips them. NOT used by parsePackSize: a bare "each" carries
+// no count, so it is not a meaningful pack size. \b guards protect real words
+// ("Sea"/"Tea"/"Pea" are untouched).
+const BARE_COUNT_TOKEN =
+  /\b(?:ea|each|cts?|counts?|pks?|packs?|pkts?|packets?|pcs?|pieces?|bunch(?:es)?|bags?|dozens?|dz)\b/gi;
+
 /** Only mass/volume units qualify as a MULTIPACK per-unit size. */
 function isSizeUnit(canonical: string): boolean {
   return unitDimension(canonical) !== 'count';
@@ -113,11 +121,12 @@ export function parsePackSize(name: string | null | undefined): PackSize | null 
 }
 
 /**
- * Strip size/multipack tokens from a name to produce a stable grouping key,
- * e.g. "RED ONION 25LBS" -> "RED ONION", "Gopi Paneer 226 G" -> "Gopi Paneer".
- * Descriptive words (adjectives, brands, "50-50", "2%") are preserved so
- * genuinely different products stay distinct. Never returns empty — falls back
- * to the trimmed original if stripping would erase everything.
+ * Strip size/multipack tokens AND standalone count/packaging words from a name
+ * to produce a stable grouping key: "RED ONION 25LBS" -> "RED ONION",
+ * "Gopi Paneer 226 G" -> "Gopi Paneer", "Mint Ea" -> "Mint", "Cilantro 24 Ct"
+ * -> "Cilantro". Descriptive words (adjectives, brands, "50-50", "2%") are
+ * preserved so genuinely different products stay distinct. Never returns empty
+ * — falls back to the trimmed original if stripping would erase everything.
  */
 export function deriveCoreName(name: string | null | undefined): string {
   if (!name) return '';
@@ -125,7 +134,8 @@ export function deriveCoreName(name: string | null | undefined): string {
 
   let s = original
     .replace(new RegExp(MULTIPACK.source, 'gi'), ' ')
-    .replace(new RegExp(SIZE_TOKEN.source, 'gi'), ' ');
+    .replace(new RegExp(SIZE_TOKEN.source, 'gi'), ' ')
+    .replace(BARE_COUNT_TOKEN, ' ');
 
   // Tidy separators orphaned by token removal (e.g. the "/" in "283GM/10oz"),
   // while keeping in-word hyphens like "Coca-Cola".

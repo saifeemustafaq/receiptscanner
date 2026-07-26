@@ -1886,5 +1886,358 @@
       "total": 423.43
     },
     "timestamp": "2026-07-26T19:15:49.496Z"
+  },
+  {
+    "id": "1785103663686",
+    "storeNameScanned": "Costco Business Center",
+    "storeNameSelected": "Costco Business Center",
+    "billingDate": "2026-07-04",
+    "uploadDate": "2026-07-26",
+    "extractedData": {
+      "storeNameScanned": "Costco Business Center",
+      "receiptDate": "2026-07-04",
+      "items": [
+        {
+          "name": "Karoun Dairies Plain Yogurt, 32 lbs",
+          "quantity": 2,
+          "unitPrice": null,
+          "totalPrice": 76.54,
+          "unit": null
+        },
+        {
+          "name": "Kirkland Signature Butter, Unsalted, Stick, 1 lb, 4 ct",
+          "quantity": 2,
+          "unitPrice": null,
+          "totalPrice": 21.98,
+          "unit": null
+        },
+        {
+          "name": "Diamond Crystal Granulated Salt, 25 lb",
+          "quantity": 1,
+          "unitPrice": null,
+          "totalPrice": 6.15,
+          "unit": null
+        },
+        {
+          "name": "Jumbo Yellow Onions, 50 lbs",
+          "quantity": 1,
+          "unitPrice": null,
+          "totalPrice": 19.24,
+          "unit": null
+        },
+        {
+          "name": "Royal Chef's Secret Basmati Rice, Extra Long Grain, 40 lbs",
+          "quantity": 1,
+          "unitPrice": null,
+          "totalPrice": 50.26,
+          "unit": null
+        }
+      ],
+      "subtotal": 174.17,
+      "tax": null,
+      "additionalCharges": [
+        {
+          "label": "Executive Member credit",
+          "amount": -10
+        }
+      ],
+      "total": 164.17
+    },
+    "timestamp": "2026-07-26T22:07:43.686Z"
+  },
+  {
+    "id": "1785103738501",
+    "storeNameScanned": "Amazon.com",
+    "storeNameSelected": "Amazon.com",
+    "billingDate": "2026-07-04",
+    "uploadDate": "2026-07-26",
+    "extractedData": {
+      "storeNameScanned": "Amazon.com",
+      "receiptDate": "2026-07-04",
+      "items": [
+        {
+          "name": "Thai Kitchen Red Curry Paste, 35 oz - One 35 Ounce Tub of Thai Red Curry Paste with Red Chili Pepper, Lemongrass, Thai Ginger and Spices, Perfect for Stir-Fries and Soup Bases",
+          "quantity": 4,
+          "unitPrice": 23.4,
+          "totalPrice": 93.6,
+          "unit": null
+        }
+      ],
+      "subtotal": 93.6,
+      "tax": 0,
+      "additionalCharges": [],
+      "total": 93.6
+    },
+    "timestamp": "2026-07-26T22:08:58.501Z"
+  },
+  {
+    "id": "1785103807219",
+    "storeNameScanned": "Costco Business Center",
+    "storeNameSelected": "Costco Business Center",
+    "billingDate": "2026-07-08",
+    "uploadDate": "2026-07-26",
+    "extractedData": {
+      "storeNameScanned": "Costco Business Center",
+      "receiptDate": "2026-07-08",
+      "items": [
+        {
+          "name": "Zucchini, 6 ct",
+          "quantity": 4,
+          "unitPrice": null,
+          "totalPrice": 38.24,
+          "unit": null
+        },
+        {
+          "name": "House Foods Organic Tofu, Firm, 16 oz, 4 ct",
+          "quantity": 3,
+          "unitPrice": null,
+          "totalPrice": 23.07,
+          "unit": null
+        },
+        {
+          "name": "Flav-R-Pac Broccoli Florets, 3.5 lbs",
+          "quantity": 3,
+          "unitPrice": null,
+          "totalPrice": 21.42,
+          "unit": null
+        }
+      ],
+      "subtotal": 82.73,
+      "tax": null,
+      "additionalCharges": [],
+      "total": 82.73
+    },
+    "timestamp": "2026-07-26T22:10:07.219Z"
+  },
+  {
+    "id": "1785103910420",
+    "storeNameScanned": "Unknown",
+    "storeNameSelected": "Smart and Final",
+    "billingDate": "2026-06-27",
+    "uploadDate": "2026-07-26",
+    "extractedData": {
+      "storeNameScanned": null,
+      "receiptDate": "2026-06-27",
+      "items": [
+        {
+          "name": "King's Hawaiian Savory Butter Rolls, 24 Count",
+          "quantity": 13,
+          "unitPrice": null,
+          "totalPrice": 77.87,
+          "unit": null
+        }
+      ],
+      "subtotal": 86.97,
+      "tax": 0,
+      "additionalCharges": [],
+      "total": 77.87
+    },
+    "timestamp": "2026-07-26T22:11:50.420Z"
+  },
+  {
+    "id": "1785103937796",
+    "storeNameScanned": "Costco Business Center",
+    "storeNameSelected": "Costco Business Center",
+    "billingDate": "2026-07-06",
+    "uploadDate": "2026-07-26",
+    "extractedData": {
+      "storeNameScanned": "Costco Business Center",
+      "receiptDate": "2026-07-06",
+      "items": [
+        {
+          "name": "Mixed Bell Peppers, 6 ct",
+          "quantity": 5,
+          "unitPrice": null,
+          "totalPrice": 46.7,
+          "unit": null
+        },
+        {
+          "name": "Sliced Raw Almonds, Baking Nuts, 5 lbs",
+          "quantity": 1,
+          "unitPrice": null,
+          "totalPrice": 28.04,
+          "unit": null
+        }
+      ],
+      "subtotal": 74.74,
+      "tax": null,
+      "additionalCharges": [],
+      "total": 74.74
+    },
+    "timestamp": "2026-07-26T22:12:17.796Z"
+  },
+  {
+    "id": "1785103988056",
+    "storeNameScanned": "Restaurant Depot",
+    "storeNameSelected": "Restaurant Depot",
+    "billingDate": "2026-07-08",
+    "uploadDate": "2026-07-26",
+    "extractedData": {
+      "storeNameScanned": "Restaurant Depot",
+      "receiptDate": "2026-07-08",
+      "items": [
+        {
+          "name": "Frozen James Farm - IQF Peas - 2.5 lbs (2.5 lb)",
+          "quantity": 2,
+          "unitPrice": 5.99,
+          "totalPrice": 11.98,
+          "unit": null
+        },
+        {
+          "name": "Frozen James Farm - IQF Mukimame Soy Beans - 2 lbs (2 lb)",
+          "quantity": 3,
+          "unitPrice": null,
+          "totalPrice": 16.17,
+          "unit": null
+        },
+        {
+          "name": "Fresh Basil - 1 lb (1 lb)",
+          "quantity": 4,
+          "unitPrice": 6.99,
+          "totalPrice": 27.96,
+          "unit": null
+        }
+      ],
+      "subtotal": 56.11,
+      "tax": null,
+      "additionalCharges": [
+        {
+          "label": "Service Fee",
+          "amount": 4.99
+        }
+      ],
+      "total": 61.1
+    },
+    "timestamp": "2026-07-26T22:13:08.056Z"
+  },
+  {
+    "id": "1785104004846",
+    "storeNameScanned": "Restaurant Depot",
+    "storeNameSelected": "Restaurant Depot",
+    "billingDate": "2026-07-06",
+    "uploadDate": "2026-07-26",
+    "extractedData": {
+      "storeNameScanned": "Restaurant Depot",
+      "receiptDate": "2026-07-06",
+      "items": [
+        {
+          "name": "RESTAURANT KING - SMALL BABY CORN - #10 CAN (#10)",
+          "quantity": 2,
+          "unitPrice": 9.99,
+          "totalPrice": 19.98,
+          "unit": null
+        }
+      ],
+      "subtotal": 19.98,
+      "tax": null,
+      "additionalCharges": [
+        {
+          "label": "Service Fee",
+          "amount": 2.49
+        }
+      ],
+      "total": 22.47
+    },
+    "timestamp": "2026-07-26T22:13:24.846Z"
+  },
+  {
+    "id": "1785104031521",
+    "storeNameScanned": "Smart & Final",
+    "storeNameSelected": "Smart and Final",
+    "billingDate": "2026-06-30",
+    "uploadDate": "2026-07-26",
+    "extractedData": {
+      "storeNameScanned": "Smart & Final",
+      "receiptDate": "2026-06-30",
+      "items": [
+        {
+          "name": "King's Hawaiian Savory Butter Rolls (24 ct)",
+          "quantity": 1,
+          "unitPrice": null,
+          "totalPrice": 6.49,
+          "unit": null
+        },
+        {
+          "name": "Diamond Crystal Granulated Salt (25 lb)",
+          "quantity": 1,
+          "unitPrice": 9.99,
+          "totalPrice": 9.99,
+          "unit": null
+        }
+      ],
+      "subtotal": 16.48,
+      "tax": null,
+      "additionalCharges": [
+        {
+          "label": "Checkout Bag Fee",
+          "amount": 0.1
+        },
+        {
+          "label": "Service Fee",
+          "amount": 2.49
+        }
+      ],
+      "total": 19.07
+    },
+    "timestamp": "2026-07-26T22:13:51.521Z"
+  },
+  {
+    "id": "1785104205397",
+    "storeNameScanned": "Smart & Final",
+    "storeNameSelected": "Smart & Final",
+    "billingDate": "2026-07-04",
+    "uploadDate": "2026-07-26",
+    "extractedData": {
+      "storeNameScanned": "Smart & Final",
+      "receiptDate": "2026-07-04",
+      "items": [
+        {
+          "name": "Oroweat Country Style, Buttermilk, White Bread, 24 oz (24 oz)",
+          "quantity": 2,
+          "unitPrice": null,
+          "totalPrice": 10.38,
+          "unit": null
+        }
+      ],
+      "subtotal": 10.38,
+      "tax": null,
+      "additionalCharges": [
+        {
+          "label": "Checkout Bag Fee",
+          "amount": 0.1
+        },
+        {
+          "label": "Service Fee",
+          "amount": 2.49
+        }
+      ],
+      "total": 12.97
+    },
+    "timestamp": "2026-07-26T22:16:45.397Z"
+  },
+  {
+    "id": "1785104228410",
+    "storeNameScanned": "327 - Sunnyvale",
+    "storeNameSelected": "Smart & Final",
+    "billingDate": "2026-06-07",
+    "uploadDate": "2026-07-26",
+    "extractedData": {
+      "storeNameScanned": "327 - Sunnyvale",
+      "receiptDate": "2026-06-07",
+      "items": [
+        {
+          "name": "King's Hawaiian Savory Butter Rolls, 24 Count",
+          "quantity": 20,
+          "unitPrice": 5.99,
+          "totalPrice": 119.8,
+          "unit": null
+        }
+      ],
+      "subtotal": 119.8,
+      "tax": 0,
+      "additionalCharges": [],
+      "total": 119.8
+    },
+    "timestamp": "2026-07-26T22:17:08.410Z"
   }
 ]
