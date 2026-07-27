@@ -143,7 +143,7 @@ There are also several planning/scratch docs at the root (`plan.md`, `new plan.m
   - Groups line items by **`groupKey = normalize(deriveCoreName(name))`** (pack-size text stripped) so size variants fold together.
   - Computes each entry's **price-per-base-unit** via `pricePerBaseUnit`, tagged with its `dimension`.
   - Applies **price-variation dedup** per **store + dimension** (`applyPriceVariationRules`, float tolerance `0.01`); chronological by `timestamp`. `$/lb` and `$/ea` points never collapse together.
-  - Produces `latestPrice/Store/Date/BaseUnit`, a primary **`dimension`** (the dominant/most-frequent one), a `dimensions[]` set, and a most-recent-first `priceHistory[]`. `primaryDimensionHistory(item)` is the shared guard that keeps comparisons single-dimension.
+  - Produces `latestPrice/Store/Date/BaseUnit`, a primary **`dimension`** (the dominant/most-frequent one), a `dimensions[]` set, and a most-recent-first `priceHistory[]`. Each entry carries a **`form`** label ("loose" / "25 lb pack" / "each") so loose vs bag/pack purchases stay in one item but remain visibly distinct. `primaryDimensionHistory(item)` is the shared guard that keeps comparisons single-dimension.
 - **`lib/analyticsUtils.ts`** builds chart data + statistics **restricted to the primary dimension** (never mixes units); `PriceStatistics` exposes `baseUnit` and `mixedDimensions` for labelling/notes. `getStoreColor` gives known chains brand colors and cycles a palette otherwise.
 - **`lib/receiptMath.ts`** provides pure, non-blocking validation (per-line `qty × unitPrice` vs printed total — only when a unit price was printed; two-tier subtotal/tax/total reconciliation) surfaced on the Home review screen.
 

@@ -110,6 +110,36 @@ export function pricePerBaseUnit(item: ReceiptItem, measure: Measure = resolveMe
   return { price: round4(total / measure.baseQuantity), ...base };
 }
 
+function trimNum(n: number): string {
+  return Number.isFinite(n) ? String(Math.round(n * 1e4) / 1e4) : '';
+}
+
+/**
+ * Human label for HOW a line was purchased, so one item's history can show a
+ * loose weight buy next to a bag/pack buy without splitting them into separate
+ * items. Derived from the measure ladder branch:
+ *   - 'unit'     -> "loose"                            (sold by printed weight/volume)
+ *   - 'packSize' -> "25 lb pack" / "4 × 25 lb pack"    (size parsed from the name)
+ *   - 'count'    -> "each"
+ */
+export function describePurchaseForm(
+  item: ReceiptItem,
+  measure: Measure = resolveMeasure(item)
+): string {
+  if (measure.source === 'packSize') {
+    const pack = parsePackSize(item.name);
+    if (pack) {
+      const each = `${trimNum(pack.packSize)} ${pack.packUnit} pack`;
+      const qty = toNumber(item.quantity);
+      return Number.isFinite(qty) && qty > 1 ? `${trimNum(qty)} × ${each}` : each;
+    }
+    return 'pack';
+  }
+  if (measure.source === 'unit') return 'loose';
+  if (measure.source === 'count') return 'each';
+  return '';
+}
+
 /**
  * A per-unit price for DISPLAY ONLY. Prefers the as-printed `unitPrice`; when
  * the receipt printed none, falls back to totalPrice / quantity. Returns null

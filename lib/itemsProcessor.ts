@@ -1,7 +1,7 @@
 import { SavedReceipt } from './types';
 import { deriveCoreName } from './packSize';
 import { normalizeItemName } from './itemMappings';
-import { resolveMeasure, pricePerBaseUnit } from './measure';
+import { resolveMeasure, pricePerBaseUnit, describePurchaseForm } from './measure';
 import type { Dimension } from './units';
 
 /**
@@ -17,6 +17,7 @@ export interface ItemPriceEntry {
   price: number;       // price per base unit ($/lb, $/l, $/ea)
   baseUnit: string;    // canonical base unit: 'lb' | 'l' | 'ea'
   dimension: Dimension;
+  form: string;        // how it was bought: 'loose' | '25 lb pack' | 'each' | ''
   date: string; // billing date
   receiptId: string;
   timestamp: string; // for sorting
@@ -83,6 +84,7 @@ export function processItemsFromReceipts(receipts: SavedReceipt[]): ProcessedIte
         price,
         baseUnit,
         dimension,
+        form: describePurchaseForm(item, measure),
         date: receipt.billingDate,
         receiptId: receipt.id,
         timestamp: receipt.timestamp,

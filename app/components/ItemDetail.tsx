@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ArrowLeft, Calendar, Store, DollarSign, TrendingUp, TrendingDown, Minus, Edit2, Check, X } from 'lucide-react';
+import { ArrowLeft, Calendar, Store, DollarSign, TrendingUp, TrendingDown, Minus, Edit2, Check, X, Package } from 'lucide-react';
 import Card from './Card';
 import Button from './Button';
 import BottomSheet from './BottomSheet';
@@ -308,6 +308,12 @@ export default function ItemDetail({
                           <Store size={16} style={{ color: 'var(--black-tertiary)' }} />
                           <span style={{ fontWeight: 500 }}>{entry.store}</span>
                         </div>
+                        {entry.form && (
+                          <div className="flex items-center gap-xs" title="How this was purchased">
+                            <Package size={16} style={{ color: 'var(--black-tertiary)' }} />
+                            <span style={{ fontWeight: 500, textTransform: 'capitalize' }}>{entry.form}</span>
+                          </div>
+                        )}
                         <div className="flex items-center gap-xs">
                           <Calendar size={16} style={{ color: 'var(--black-tertiary)' }} />
                           <span 
